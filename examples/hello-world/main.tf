@@ -14,9 +14,9 @@ module "this" {
       "name" = "environment_name"
       "id"   = "environment_id"
     }
-    service = {
-      "name" = "service_name"
-      "id"   = "service_id"
+    resource = {
+      "name" = "resource_name"
+      "id"   = "resource_id"
     }
   }
 }
@@ -29,6 +29,6 @@ output "environment_name" {
   value = module.this.walrus_environment_name
 }
 
-output "service_name" {
-  value = module.this.walrus_service_name
+output "resource_name" {
+  value = module.this.walrus_resource_name
 }

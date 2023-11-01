@@ -31,5 +31,5 @@ No inputs.
 |------|-------------|
 | <a name="output_environment_name"></a> [environment\_name](#output\_environment\_name) | n/a |
 | <a name="output_project_name"></a> [project\_name](#output\_project\_name) | n/a |
-| <a name="output_service_name"></a> [service\_name](#output\_service\_name) | n/a |
+| <a name="output_resource_name"></a> [resource\_name](#output\_resource\_name) | n/a |
 <!-- END_TF_DOCS -->

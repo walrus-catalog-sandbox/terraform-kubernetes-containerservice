@@ -22,14 +22,14 @@ output "walrus_environment_id" {
   description = "The id of environment where deployed in Walrus."
 }
 
-output "walrus_service_name" {
-  value       = try(local.context["service"]["name"], null)
-  description = "The name of service where deployed in Walrus."
+output "walrus_resource_name" {
+  value       = try(local.context["resource"]["name"], null)
+  description = "The name of resource where deployed in Walrus."
 }
 
-output "walrus_service_id" {
-  value       = try(local.context["service"]["id"], null)
-  description = "The id of service where deployed in Walrus."
+output "walrus_resource_id" {
+  value       = try(local.context["resource"]["id"], null)
+  description = "The id of resource where deployed in Walrus."
 }
 
 #
