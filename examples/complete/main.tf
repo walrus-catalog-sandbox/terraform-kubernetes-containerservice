@@ -19,12 +19,42 @@ resource "kubernetes_namespace_v1" "infra" {
   }
 }
 
+resource "kubernetes_persistent_volume_claim_v1" "infra_pv" {
+  wait_until_bound = false
+
+  metadata {
+    namespace = kubernetes_namespace_v1.infra.metadata[0].name
+    name      = "pv"
+  }
+
+  spec {
+    access_modes = ["ReadWriteOnce"]
+    resources {
+      requests = {
+        "storage" = "20Gi"
+      }
+    }
+  }
+}
+
 module "this" {
   source = "../.."
 
   infrastructure = {
     namespace = kubernetes_namespace_v1.infra.metadata[0].name
   }
+
+  credentials = [
+    {
+      name = "dockerhub"
+      type = "image_registry"
+      image_registry = {
+        server   = "https://index.docker.io/v1/"
+        username = "username"
+        password = "password"
+      }
+    }
+  ]
 
   configs = [
     {
@@ -94,23 +124,22 @@ module "this" {
     #   }
     # },
     {
-      name = "generic-ephemeral"
-      type = "generic"
-      generic = {
-        ephemeral = true
-        size      = 1024 # 1Gi
+      name = "ephemeral"
+      type = "ephemeral"
+      ephemeral = {
+        size = 1024 # 1Gi
       }
     },
     {
-      name = "generic-persistent"
-      type = "generic"
-      generic = {
-        size = 30 * 1024 # 30Gi
+      name = "persistent"
+      type = "persistent"
+      persistent = {
+        name = kubernetes_persistent_volume_claim_v1.infra_pv.metadata[0].name
       }
     },
     {
       name  = "invalid-storage"
-      type  = "generic"
+      type  = "persistent"
       empty = {} # wrong config
     }
   ]
@@ -159,14 +188,14 @@ module "this" {
           path = "/opt"
           type = "storage"
           storage = {
-            name = "generic-ephemeral"
+            name = "ephemeral"
           }
         },
         {
           path = "/var/stg/persistent"
           type = "storage"
           storage = {
-            name = "generic-persistent"
+            name = "persistent"
           }
         }
       ]

@@ -192,12 +192,16 @@ storages:
       portal: string
       iqn: string
 - name: string
-  type: generic                    # convert to persistent volume claim template
-  generic:
+  type: ephemeral                   # convert to ephemeral volume claim template
+  ephemeral:
     class: string, optional
-    ephemeral: bool, optional
     access_mode: string, optional
-    size: number, optional         # in megabyte
+    size: number, optional          # in megabyte
+- name: string
+  type: persistent                  # convert to persistent volume claim template
+  persistent:
+    read_only: bool, optional
+    name: string                    # persistent volume claim name
 ```
 EOF
   type = list(object({
@@ -228,11 +232,14 @@ EOF
         iqn    = string
       }))
     }))
-    generic = optional(object({
+    ephemeral = optional(object({
       class       = optional(string)
-      ephemeral   = optional(bool, false)
       access_mode = optional(string, "ReadWriteOnce")
       size        = number
+    }))
+    persistent = optional(object({
+      read_only = optional(bool, false)
+      name      = string
     }))
   }))
   default = []

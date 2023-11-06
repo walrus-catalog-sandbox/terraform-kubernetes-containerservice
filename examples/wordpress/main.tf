@@ -13,9 +13,27 @@ provider "kubernetes" {
   config_path = "~/.kube/config"
 }
 
-resource "kubernetes_namespace_v1" "namespace" {
+resource "kubernetes_namespace_v1" "infra" {
   metadata {
     name = "wordpress-svc"
+  }
+}
+
+resource "kubernetes_persistent_volume_claim_v1" "infra_pv" {
+  wait_until_bound = false
+
+  metadata {
+    namespace = kubernetes_namespace_v1.infra.metadata[0].name
+    name      = "pv"
+  }
+
+  spec {
+    access_modes = ["ReadWriteOnce"]
+    resources {
+      requests = {
+        "storage" = "20Gi"
+      }
+    }
   }
 }
 
@@ -23,16 +41,15 @@ module "this" {
   source = "../.."
 
   infrastructure = {
-    namespace = kubernetes_namespace_v1.namespace.metadata[0].name
+    namespace = kubernetes_namespace_v1.infra.metadata[0].name
   }
 
   storages = [
     {
       name = "data"
-      type = "generic"
-      generic = {
-        access_mode = "ReadWriteOnce"
-        size        = 20 * 1024 # in megabyte
+      type = "persistent"
+      persistent = {
+        name = kubernetes_persistent_volume_claim_v1.infra_pv.metadata[0].name
       }
     },
     {

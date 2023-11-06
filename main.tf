@@ -115,7 +115,7 @@ resource "kubernetes_config_map_v1" "configs" {
 }
 
 #
-# Storages
+# Deployment
 #
 
 locals {
@@ -124,41 +124,7 @@ locals {
     if lookup(c, c.type, null) != null
   }
   storages = values(local.storages_map)
-}
 
-## provide generice persistent storages.
-
-resource "kubernetes_persistent_volume_claim_v1" "generic_persistent_storages" {
-  for_each = {
-    for v in local.storages : v.name => v.generic
-    if v.type == "generic" && !try(v.generic.ephemeral, false)
-  }
-
-  wait_until_bound = true
-
-  metadata {
-    namespace   = local.namespace
-    name        = join("-", [local.resource_name, "stg", each.key])
-    annotations = local.annotations
-    labels      = local.labels
-  }
-
-  spec {
-    access_modes       = [coalesce(each.value.access_mode, "ReadWriteOnce")]
-    storage_class_name = each.value.class
-    resources {
-      requests = {
-        "storage" = format("%dMi", each.value.size)
-      }
-    }
-  }
-}
-
-#
-# Deployment
-#
-
-locals {
   containers_map = {
     for c in try(flatten(var.containers), []) : c.name => c
   }
@@ -288,12 +254,12 @@ resource "kubernetes_deployment_v1" "deployment" {
           }
         }
 
-        ## declare generic ephemeral storages.
+        ## declare ephemeral storages.
 
         dynamic "volume" {
           for_each = {
-            for v in local.storages : v.name => v.generic
-            if v.type == "generic" && try(v.generic.ephemeral, false)
+            for v in local.storages : v.name => v.ephemeral
+            if v.type == "ephemeral"
           }
           content {
             name = format("stg-%s", volume.key)
@@ -317,17 +283,18 @@ resource "kubernetes_deployment_v1" "deployment" {
           }
         }
 
-        ## declare generic persistent storages.
+        ## declare persistent storages.
 
         dynamic "volume" {
           for_each = {
-            for v in local.storages : v.name => v.generic
-            if v.type == "generic" && !try(v.generic.ephemeral, false)
+            for v in local.storages : v.name => v.persistent
+            if v.type == "persistent"
           }
           content {
             name = format("stg-%s", volume.key)
             persistent_volume_claim {
-              claim_name = join("-", [local.resource_name, "stg", volume.key])
+              read_only  = volume.value.read_only
+              claim_name = volume.value.name
             }
           }
         }
