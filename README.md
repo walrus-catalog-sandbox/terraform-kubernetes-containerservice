@@ -1,6 +1,6 @@
-# Awesome Walrus Template
+# Kubernetes Container Service
 
-Start here to create an awesome Walrus template.
+Terraform module which deploys container service on Kubernetes.
 
 ## Usage
 
