@@ -2,6 +2,15 @@
 
 Deploy a single nginx container by root module.
 
+```bash
+# setup infra
+$ tf apply -auto-approve \
+  -target=kubernetes_namespace_v1.example
+
+# create service
+$ tf apply -auto-approve
+```
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
@@ -26,7 +35,7 @@ Deploy a single nginx container by root module.
 
 | Name | Type |
 |------|------|
-| [kubernetes_namespace_v1.infra](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/namespace_v1) | resource |
+| [kubernetes_namespace_v1.example](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/namespace_v1) | resource |
 
 ## Inputs
 

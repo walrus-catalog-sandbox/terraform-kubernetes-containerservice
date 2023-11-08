@@ -13,17 +13,17 @@ provider "kubernetes" {
   config_path = "~/.kube/config"
 }
 
-resource "kubernetes_namespace_v1" "infra" {
+resource "kubernetes_namespace_v1" "example" {
   metadata {
     name = "complete-svc"
   }
 }
 
-resource "kubernetes_persistent_volume_claim_v1" "infra_pv" {
+resource "kubernetes_persistent_volume_claim_v1" "example" {
   wait_until_bound = false
 
   metadata {
-    namespace = kubernetes_namespace_v1.infra.metadata[0].name
+    namespace = kubernetes_namespace_v1.example.metadata[0].name
     name      = "pv"
   }
 
@@ -41,7 +41,7 @@ module "this" {
   source = "../.."
 
   infrastructure = {
-    namespace = kubernetes_namespace_v1.infra.metadata[0].name
+    namespace = kubernetes_namespace_v1.example.metadata[0].name
   }
 
   credentials = [
@@ -134,7 +134,7 @@ module "this" {
       name = "persistent"
       type = "persistent"
       persistent = {
-        name = kubernetes_persistent_volume_claim_v1.infra_pv.metadata[0].name
+        name = kubernetes_persistent_volume_claim_v1.example.metadata[0].name
       }
     },
     {

@@ -13,7 +13,7 @@ provider "kubernetes" {
   config_path = "~/.kube/config"
 }
 
-resource "kubernetes_namespace_v1" "infra" {
+resource "kubernetes_namespace_v1" "example" {
   metadata {
     name = "nginx-svc"
   }
@@ -23,7 +23,7 @@ module "this" {
   source = "../.."
 
   infrastructure = {
-    namespace = kubernetes_namespace_v1.infra.metadata[0].name
+    namespace = kubernetes_namespace_v1.example.metadata[0].name
   }
 
   configs = [
