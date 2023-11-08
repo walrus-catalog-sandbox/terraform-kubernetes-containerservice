@@ -52,7 +52,7 @@ EOF
 
 variable "deployment" {
   description = <<-EOF
-Specify the deployment action, including scaling and scheduling.
+Specify the deployment action, like scaling, scheduling, security and so on.
 
 Examples:
 ```
@@ -60,7 +60,7 @@ deployment:
   timeout: number, optional
   replicas: 1
   update_strategy:
-    type: recreate/rolling       
+    type: recreate/rolling
     recreate: {}
     rolling: 
       max_surge: number, in fraction, i.e. 0.25, 0.5, 1
@@ -75,7 +75,7 @@ EOF
     replicas = optional(number, 1)
     update_strategy = optional(object({
       type     = optional(string, "rolling")
-      recreate = optional(object({}))
+      recreate = optional(object({}), {})
       rolling = optional(object({
         max_surge       = optional(number, 0.25)
         max_unavailable = optional(number, 0.25)
@@ -171,7 +171,7 @@ storages:
     medium: string, optional
     size: number, optional         # in megabyte
 - name: string
-  type: nas                        # convert to nfs volume
+  type: nas                        # convert to in-tree nfs volume
   nas:
     read_only: bool, optional
     server: string
@@ -179,7 +179,7 @@ storages:
     username: string, optional
     password: string, optional
 - name: string
-  type: san                        # convert to fc or iscsi volume
+  type: san                        # convert to in-tree fc or iscsi volume
   san:
     read_only: bool, optional
     fs_type: string, optional
@@ -192,16 +192,16 @@ storages:
       portal: string
       iqn: string
 - name: string
-  type: ephemeral                   # convert to ephemeral volume claim template
+  type: ephemeral                   # convert to dynamic volume claim template
   ephemeral:
     class: string, optional
     access_mode: string, optional
     size: number, optional          # in megabyte
 - name: string
-  type: persistent                  # convert to persistent volume claim template
+  type: persistent                  # convert to existing volume claim template
   persistent:
     read_only: bool, optional
-    name: string                    # persistent volume claim name
+    name: string                    # the name of persistent volume claim
 ```
 EOF
   type = list(object({
@@ -256,7 +256,7 @@ Specify the container items to deployment.
 Examples:
 ```
 containers:
-- name: string                     # unique
+- name: string                        # unique
   profile: init/run
   image:
     name: string
@@ -265,18 +265,18 @@ containers:
     command: list(string), optional
     args: list(string), optional
     working_dir: string, optional
-    as: string, optional       # i.e. non_root, user_id:group:id
+    as: string, optional              # i.e. non_root, user_id:group:id
   resources:
     requests:
-      cpu: number, optional        # in oneCPU, i.e. 0.25, 0.5, 1, 2, 4, 8
-      memory: number, optional     # in megabyte
-      gpu: number, optional        # i.e. 0.25, 0.5, 1, 2, 4, 8
+      cpu: number, optional           # in oneCPU, i.e. 0.25, 0.5, 1, 2, 4, 8
+      memory: number, optional        # in megabyte
+      gpu: number, optional           # i.e. 0.25, 0.5, 1, 2, 4, 8
     limits:
-      cpu: number, optioanl        # in oneCPU, i.e. 0.25, 0.5, 1, 2, 4, 8
-      memory: number, optional     # in megabyte
-      gpu: number, optional        # i.e. 0.25, 0.5, 1, 2, 4, 8
+      cpu: number, optioanl           # in oneCPU, i.e. 0.25, 0.5, 1, 2, 4, 8
+      memory: number, optional        # in megabyte
+      gpu: number, optional           # i.e. 0.25, 0.5, 1, 2, 4, 8
   envs:
-  - name: string, optional         # only work if the config.key is null
+  - name: string, optional            # only work if the config.key is null
     type: text/config
     text:
       content: string
@@ -284,7 +284,7 @@ containers:
       name: string
       key: string, optional
   mounts:
-  - path: string                   # unique
+  - path: string                      # unique
     read_only: bool, optional
     type: config/storage
     config:
@@ -300,19 +300,19 @@ containers:
     external: number, optional
     protocol: udp/tcp
   checks:
-  - initial_delay: number
-    interval: number
-    timeout: number
-    retries: number
-    teardown_unhealthy: bool
+  - initial_delay: number, optional
+    interval: number, optional
+    timeout: number, optional
+    retries: number, optional
+    teardown_unhealthy: bool, optional
     type: execute/request
     execute:
       command: list(string)
     request:
       protocol: tcp/grpc/http/https
-      port: string
+      port: number
       headers: map(string), optional
-      path: string, optional
+      path: string, optional          # put GRPC service name if request.protocol is grpc
 ```
 EOF
   type = list(object({
