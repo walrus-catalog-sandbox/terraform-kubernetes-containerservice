@@ -99,6 +99,10 @@ output "context" {
   value = module.this.context
 }
 
+output "selector" {
+  value = module.this.selector
+}
+
 output "endpoint_internal" {
   value = module.this.endpoint_internal
 }

@@ -100,6 +100,7 @@ No modules.
 | Name | Description |
 |------|-------------|
 | <a name="output_context"></a> [context](#output\_context) | The input context, a map, which is used for orchestration. |
+| <a name="output_selector"></a> [selector](#output\_selector) | The selector, a map, which is used for dependencies or collaborations. |
 | <a name="output_endpoint_internal"></a> [endpoint\_internal](#output\_endpoint\_internal) | The internal endpoints, a string list, which are used for internal access. |
 <!-- END_TF_DOCS -->
 
