@@ -11,6 +11,6 @@ output "selector" {
 output "endpoint_internal" {
   description = "The internal endpoints, a string list, which are used for internal access."
   value = [
-    for c in local.run_containers_ports : format("%s.%s.svc:%d", local.resource_name, local.namespace, c.external != null ? c.external : c.internal)
+    for c in local.run_containers_ports : format("%s.%s.svc.%s:%d", local.resource_name, local.namespace, local.domain_suffix, c.external != null ? c.external : c.internal)
   ]
 }

@@ -37,11 +37,13 @@ Examples:
 infrastructure:
   namespace: string, optional
   gpu_vendor: string, optional
+  domain_suffix: string, optional
 ```
 EOF
   type = object({
-    namespace  = optional(string)
-    gpu_vendor = optional(string, "nvidia.com")
+    namespace     = optional(string)
+    gpu_vendor    = optional(string, "nvidia.com")
+    domain_suffix = optional(string, "cluster.local")
   })
   default = {}
 }

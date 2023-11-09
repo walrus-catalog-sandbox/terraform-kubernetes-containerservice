@@ -6,8 +6,9 @@ locals {
   resource_name    = coalesce(try(var.context["resource"]["name"], null), "example")
   resource_id      = coalesce(try(var.context["resource"]["id"], null), "example_id")
 
-  namespace  = coalesce(try(var.infrastructure.namespace, ""), join("-", [local.project_name, local.environment_name]))
-  gpu_vendor = coalesce(try(var.infrastructure.gpu_vendor, ""), "nvdia.com")
+  domain_suffix = coalesce(var.infrastructure.domain_suffix, "cluster.local")
+  namespace     = coalesce(try(var.infrastructure.namespace, ""), join("-", [local.project_name, local.environment_name]))
+  gpu_vendor    = coalesce(try(var.infrastructure.gpu_vendor, ""), "nvdia.com")
   annotations = {
     "walrus.seal.io/project-id"     = local.project_id
     "walrus.seal.io/environment-id" = local.environment_id
