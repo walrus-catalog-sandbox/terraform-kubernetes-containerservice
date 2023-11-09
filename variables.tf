@@ -65,8 +65,8 @@ deployment:
     type: recreate/rolling
     recreate: {}
     rolling: 
-      max_surge: number, in fraction, i.e. 0.25, 0.5, 1
-      max_unavailable: number, in fraction, i.e. 0.25, 0.5, 1
+      max_surge: number, optional        # in fraction, i.e. 0.25, 0.5, 1
+      max_unavailable: number, optional  # in fraction, i.e. 0.25, 0.5, 1
   system_controls:
   - name: string
     value: string
@@ -112,7 +112,7 @@ Specify the credential items to fetch private data, like an internal image regis
 Examples:
 ```
 credentials:
-- name: string                     # unique
+- name: string                           # unique
   type: image_registry
   image_registry: 
     server: string
@@ -141,12 +141,12 @@ Specify the configuration items to configure containers, either raw or sensitive
 Examples:
 ```
 configs:
-- name: string                     # unique
-  type: data                       # convert to config map
+- name: string                           # unique
+  type: data                             # convert to config map
   data: 
     (key: string): string
 - name: string
-  type: secret                     # convert to secret
+  type: secret                           # convert to secret
   secret:
     (key: string): string
 ```
@@ -167,13 +167,13 @@ Specify the storage items to mount containers.
 Examples:
 ```
 storages:
-- name: string                     # unique
-  type: empty                      # convert ot empty_dir volume
+- name: string                           # unique
+  type: empty                            # convert ot empty_dir volume
   empty:
     medium: string, optional
-    size: number, optional         # in megabyte
+    size: number, optional               # in megabyte
 - name: string
-  type: nas                        # convert to in-tree nfs volume
+  type: nas                              # convert to in-tree nfs volume
   nas:
     read_only: bool, optional
     server: string
@@ -181,7 +181,7 @@ storages:
     username: string, optional
     password: string, optional
 - name: string
-  type: san                        # convert to in-tree fc or iscsi volume
+  type: san                              # convert to in-tree fc or iscsi volume
   san:
     read_only: bool, optional
     fs_type: string, optional
@@ -194,16 +194,16 @@ storages:
       portal: string
       iqn: string
 - name: string
-  type: ephemeral                   # convert to dynamic volume claim template
+  type: ephemeral                         # convert to dynamic volume claim template
   ephemeral:
     class: string, optional
     access_mode: string, optional
-    size: number, optional          # in megabyte
+    size: number, optional                # in megabyte
 - name: string
-  type: persistent                  # convert to existing volume claim template
+  type: persistent                        # convert to existing volume claim template
   persistent:
     read_only: bool, optional
-    name: string                    # the name of persistent volume claim
+    name: string                          # the name of persistent volume claim
 ```
 EOF
   type = list(object({
@@ -258,7 +258,7 @@ Specify the container items to deployment.
 Examples:
 ```
 containers:
-- name: string                        # unique
+- name: string                           # unique
   profile: init/run
   image:
     name: string
@@ -267,18 +267,18 @@ containers:
     command: list(string), optional
     args: list(string), optional
     working_dir: string, optional
-    as: string, optional              # i.e. non_root, user_id:group:id
+    as: string, optional                # i.e. non_root, user_id:group:id
   resources:
     requests:
-      cpu: number, optional           # in oneCPU, i.e. 0.25, 0.5, 1, 2, 4, 8
-      memory: number, optional        # in megabyte
-      gpu: number, optional           # i.e. 0.25, 0.5, 1, 2, 4, 8
+      cpu: number, optional             # in oneCPU, i.e. 0.25, 0.5, 1, 2, 4, 8
+      memory: number, optional          # in megabyte
+      gpu: number, optional             # i.e. 0.25, 0.5, 1, 2, 4, 8
     limits:
-      cpu: number, optioanl           # in oneCPU, i.e. 0.25, 0.5, 1, 2, 4, 8
-      memory: number, optional        # in megabyte
-      gpu: number, optional           # i.e. 0.25, 0.5, 1, 2, 4, 8
+      cpu: number, optioanl             # in oneCPU, i.e. 0.25, 0.5, 1, 2, 4, 8
+      memory: number, optional          # in megabyte
+      gpu: number, optional             # i.e. 0.25, 0.5, 1, 2, 4, 8
   envs:
-  - name: string, optional            # only work if the config.key is null
+  - name: string, optional              # only work if the config.key is null
     type: text/config
     text:
       content: string
@@ -286,14 +286,14 @@ containers:
       name: string
       key: string, optional
   mounts:
-  - path: string                      # unique
+  - path: string                        # unique
     read_only: bool, optional
     type: config/storage
     config:
       name: string
       key: string, optional
       mode: string, optional
-      disable_changed: bool, optional # only work if config.key is not null
+      disable_changed: bool, optional   # only work if config.key is not null
     storage:
       name: string
       sub_path: string, optional
@@ -314,7 +314,7 @@ containers:
       protocol: tcp/grpc/http/https
       port: number
       headers: map(string), optional
-      path: string, optional          # put GRPC service name if request.protocol is grpc
+      path: string, optional             # put GRPC service name if request.protocol is grpc
 ```
 EOF
   type = list(object({
