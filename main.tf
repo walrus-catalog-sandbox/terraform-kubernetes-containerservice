@@ -120,6 +120,17 @@ resource "kubernetes_config_map_v1" "configs" {
 #
 
 locals {
+  downward_annotations = {
+    WALRUS_PROJECT_ID     = "walrus.seal.io/project-id"
+    WALRUS_ENVIRONMENT_ID = "walrus.seal.io/environment-id"
+    WALRUS_RESOURCE_ID    = "walrus.seal.io/resource-id"
+  }
+  downward_labels = {
+    WALRUS_PROJECT_NAME     = "walrus.seal.io/project-name"
+    WALRUS_ENVIRONMENT_NAME = "walrus.seal.io/environment-name"
+    WALRUS_RESOURCE_NAME    = "walrus.seal.io/resource-name"
+  }
+
   storages_map = {
     for c in try(flatten(var.storages), []) : c.name => c
     if lookup(c, c.type, null) != null
@@ -481,6 +492,30 @@ resource "kubernetes_deployment_v1" "deployment" {
               }
             }
 
+            dynamic "env" {
+              for_each = local.downward_annotations
+              content {
+                name = env.key
+                value_from {
+                  field_ref {
+                    field_path = format("metadata.annotations['%s']", env.value)
+                  }
+                }
+              }
+            }
+
+            dynamic "env" {
+              for_each = local.downward_labels
+              content {
+                name = env.key
+                value_from {
+                  field_ref {
+                    field_path = format("metadata.labels['%s']", env.value)
+                  }
+                }
+              }
+            }
+
             dynamic "volume_mount" {
               for_each = {
                 for c in try(flatten(init_container.value.mounts), []) : c.path => c
@@ -582,6 +617,30 @@ resource "kubernetes_deployment_v1" "deployment" {
                   for_each = local.configs_map[env_from.value.config.name].type == "secret" ? [{}] : []
                   content {
                     name = join("-", [local.resource_name, "cfg", env_from.value.config.name])
+                  }
+                }
+              }
+            }
+
+            dynamic "env" {
+              for_each = local.downward_annotations
+              content {
+                name = env.key
+                value_from {
+                  field_ref {
+                    field_path = format("metadata.annotations['%s']", env.value)
+                  }
+                }
+              }
+            }
+
+            dynamic "env" {
+              for_each = local.downward_labels
+              content {
+                name = env.key
+                value_from {
+                  field_ref {
+                    field_path = format("metadata.labels['%s']", env.value)
                   }
                 }
               }
