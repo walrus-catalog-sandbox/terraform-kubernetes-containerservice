@@ -179,6 +179,8 @@ resource "kubernetes_deployment_v1" "deployment" {
       }
 
       spec {
+        automount_service_account_token = false
+
         dynamic "security_context" {
           for_each = try(length(var.deployment.system_controls), 0) > 0 ? [{}] : []
           content {
