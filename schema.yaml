@@ -9,7 +9,7 @@ components:
       type: object
       properties:
         context:
-          title: context
+          title: Context
           type: object
           description: |
             Receive contextual information. When Walrus deploys, Walrus will inject specific contextual information into this field.
@@ -27,14 +27,14 @@ components:
                 name: string
                 id: string
             ```
+          default: {}
           additionalProperties:
-            x-walrus-original:
-              type: dynamic
+            type: object
           x-walrus-ui:
             group: Basic
             hidden: true
         infrastructure:
-          title: infrastructure
+          title: Infrastructure
           type: object
           description: |
             Specify the infrastructure information for deploying.
@@ -44,112 +44,115 @@ components:
             infrastructure:
               namespace: string, optional
               gpu_vendor: string, optional
+              domain_suffix: string, optional
             ```
+          default: {}
           properties:
+            domain_suffix:
+              title: Domain Suffix
+              type: string
             gpu_vendor:
-              default: nvidia.com
-              title: gpu_vendor
+              title: Gpu Vendor
               type: string
             namespace:
-              title: namespace
+              title: Namespace
               type: string
           x-walrus-ui:
             group: Infrastructure
         deployment:
-          title: deployment
+          title: Deployment
           type: object
-          description: "Specify the deployment action, including scaling and scheduling.\n\nExamples:\n```\ndeployment:\n
-            \ timeout: number, optional\n  replicas: 1\n  update_strategy:\n    type:
-            recreate/rolling       \n    recreate: {}\n    rolling: \n      max_surge:
-            number, in fraction, i.e. 0.25, 0.5, 1\n      max_unavailable: number,
-            in fraction, i.e. 0.25, 0.5, 1\n  system_controls:\n  - name: string\n
-            \   value: string\n```\n"
+          description: "Specify the deployment action, like scaling, scheduling, security
+            and so on.\n\nExamples:\n```\ndeployment:\n  timeout: number, optional\n
+            \ replicas: 1\n  update_strategy:\n    type: recreate/rolling\n    recreate:
+            {}\n    rolling: \n      max_surge: number, optional        # in fraction,
+            i.e. 0.25, 0.5, 1\n      max_unavailable: number, optional  # in fraction,
+            i.e. 0.25, 0.5, 1\n  system_controls:\n  - name: string\n    value: string\n```\n"
           properties:
             replicas:
               default: 1
-              title: replicas
+              title: Replicas
               type: number
             system_controls:
               items:
                 properties:
                   name:
-                    title: name
+                    title: Name
                     type: string
                   value:
-                    title: value
+                    title: Value
                     type: string
                 required:
                 - name
                 - value
                 type: object
-              title: system_controls
+              title: System Controls
               type: array
             timeout:
-              title: timeout
+              title: Timeout
               type: number
             update_strategy:
               properties:
                 recreate:
-                  title: recreate
+                  default: {}
+                  title: Recreate
                   type: object
-                  x-walrus-ui:
-                    widget: yaml
                 rolling:
                   properties:
                     max_surge:
                       default: 0.25
-                      title: max_surge
+                      title: Max Surge
                       type: number
                     max_unavailable:
                       default: 0.25
-                      title: max_unavailable
+                      title: Max Unavailable
                       type: number
-                  title: rolling
+                  title: Rolling
                   type: object
                 type:
                   default: rolling
-                  title: type
+                  title: Type
                   type: string
-              title: update_strategy
+              title: Update Strategy
               type: object
           x-walrus-ui:
             group: Deployment
         credentials:
-          title: credentials
+          title: Credentials
           type: array
           description: "Specify the credential items to fetch private data, like an
             internal image registry.\n\nExamples:\n```\ncredentials:\n- name: string
-            \                    # unique\n  type: image_registry\n  image_registry:
+            \                          # unique\n  type: image_registry\n  image_registry:
             \n    server: string\n    username: string\n    password: string\n    email:
             string, optional\n```\n"
+          default: []
           items:
             properties:
               image_registry:
                 properties:
                   email:
-                    title: email
+                    title: Email
                     type: string
                   password:
-                    title: password
+                    title: Password
                     type: string
                   server:
-                    title: server
+                    title: Server
                     type: string
                   username:
-                    title: username
+                    title: Username
                     type: string
                 required:
                 - password
                 - server
                 - username
-                title: image_registry
+                title: Image Registry
                 type: object
               name:
-                title: name
+                title: Name
                 type: string
               type:
-                default: image_registry
-                title: type
+                title: Type
                 type: string
             required:
             - name
@@ -157,31 +160,31 @@ components:
           x-walrus-ui:
             group: Deployment
         configs:
-          title: configs
+          title: Configs
           type: array
           description: "Specify the configuration items to configure containers, either
-            raw or sensitive data.\n\nExamples:\n```\nconfigs:\n- name: string                     #
-            unique\n  type: data                       # convert to config map\n  data:
-            \n    (key: string): string\n- name: string\n  type: secret                     #
+            raw or sensitive data.\n\nExamples:\n```\nconfigs:\n- name: string                           #
+            unique\n  type: data                             # convert to config map\n
+            \ data: \n    (key: string): string\n- name: string\n  type: secret                           #
             convert to secret\n  secret:\n    (key: string): string\n```\n"
+          default: []
           items:
             properties:
               data:
                 additionalProperties:
                   type: string
-                title: data
+                title: Data
                 type: object
               name:
-                title: name
+                title: Name
                 type: string
               secret:
                 additionalProperties:
                   type: string
-                title: secret
+                title: Secret
                 type: object
               type:
-                default: data
-                title: type
+                title: Type
                 type: string
             required:
             - name
@@ -189,144 +192,137 @@ components:
           x-walrus-ui:
             group: Deployment
         storages:
-          title: storages
+          title: Storages
           type: array
           description: "Specify the storage items to mount containers.\n\nExamples:\n```\nstorages:\n-
-            name: string                     # unique\n  type: empty                      #
+            name: string                           # unique\n  type: empty                            #
             convert ot empty_dir volume\n  empty:\n    medium: string, optional\n
-            \   size: number, optional         # in megabyte\n- name: string\n  type:
-            nas                        # convert to nfs volume\n  nas:\n    read_only:
-            bool, optional\n    server: string\n    path: string, optional\n    username:
-            string, optional\n    password: string, optional\n- name: string\n  type:
-            san                        # convert to fc or iscsi volume\n  san:\n    read_only:
-            bool, optional\n    fs_type: string, optional\n    type: fc/iscsi\n    fc:
-            \n      lun: number\n      wwns: list(string)\n    iscsi\n      lun: number,
-            optional\n      portal: string\n      iqn: string\n- name: string\n  type:
-            ephemeral                   # convert to ephemeral volume claim template\n
-            \ ephemeral:\n    class: string, optional\n    access_mode: string, optional\n
-            \   size: number, optional          # in megabyte\n- name: string\n  type:
-            persistent                  # convert to persistent volume claim template\n
-            \ persistent:\n    read_only: bool, optional\n    name: string                    #
-            persistent volume claim name\n```\n"
+            \   size: number, optional               # in megabyte\n- name: string\n
+            \ type: nas                              # convert to in-tree nfs volume\n
+            \ nas:\n    read_only: bool, optional\n    server: string\n    path: string,
+            optional\n    username: string, optional\n    password: string, optional\n-
+            name: string\n  type: san                              # convert to in-tree
+            fc or iscsi volume\n  san:\n    read_only: bool, optional\n    fs_type:
+            string, optional\n    type: fc/iscsi\n    fc: \n      lun: number\n      wwns:
+            list(string)\n    iscsi\n      lun: number, optional\n      portal: string\n
+            \     iqn: string\n- name: string\n  type: ephemeral                         #
+            convert to dynamic volume claim template\n  ephemeral:\n    class: string,
+            optional\n    access_mode: string, optional\n    size: number, optional
+            \               # in megabyte\n- name: string\n  type: persistent                        #
+            convert to existing volume claim template\n  persistent:\n    read_only:
+            bool, optional\n    name: string                          # the name of
+            persistent volume claim\n```\n"
+          default: []
           items:
             properties:
               empty:
                 properties:
                   medium:
-                    title: medium
+                    title: Medium
                     type: string
                   size:
-                    title: size
+                    title: Size
                     type: number
-                title: empty
+                title: Empty
                 type: object
               ephemeral:
                 properties:
                   access_mode:
-                    default: ReadWriteOnce
-                    title: access_mode
+                    title: Access Mode
                     type: string
                   class:
-                    title: class
+                    title: Class
                     type: string
                   size:
-                    title: size
+                    title: Size
                     type: number
                 required:
                 - size
-                title: ephemeral
+                title: Ephemeral
                 type: object
               name:
-                title: name
+                title: Name
                 type: string
               nas:
                 properties:
                   password:
-                    title: password
+                    title: Password
                     type: string
                   path:
-                    default: /
-                    title: path
+                    title: Path
                     type: string
                   read_only:
-                    default: false
-                    title: read_only
+                    title: Read Only
                     type: boolean
                   server:
-                    title: server
+                    title: Server
                     type: string
                   username:
-                    title: username
+                    title: Username
                     type: string
                 required:
                 - server
-                title: nas
+                title: Nas
                 type: object
               persistent:
                 properties:
                   name:
-                    title: name
+                    title: Name
                     type: string
                   read_only:
-                    default: false
-                    title: read_only
+                    title: Read Only
                     type: boolean
                 required:
                 - name
-                title: persistent
+                title: Persistent
                 type: object
               san:
                 properties:
                   fc:
                     properties:
                       lun:
-                        default: 0
-                        title: lun
+                        title: Lun
                         type: number
                       wwns:
                         items:
                           type: string
-                        title: wwns
+                        title: Wwns
                         type: array
                     required:
                     - wwns
-                    title: fc
+                    title: Fc
                     type: object
                   fs_type:
-                    default: ext4
-                    title: fs_type
+                    title: Fs Type
                     type: string
                   iscsi:
                     properties:
                       iqn:
-                        title: iqn
+                        title: Iqn
                         type: string
                       lun:
-                        default: 0
-                        title: lun
+                        title: Lun
                         type: number
                       portal:
-                        title: portal
+                        title: Portal
                         type: string
                     required:
                     - iqn
                     - portal
-                    title: iscsi
+                    title: Iscsi
                     type: object
                   read_only:
-                    default: false
-                    title: read_only
+                    title: Read Only
                     type: boolean
                   type:
-                    title: type
+                    title: Type
                     type: string
                 required:
                 - type
-                title: san
+                title: San
                 type: object
               type:
-                default: empty
-                title: type
+                title: Type
                 type: string
             required:
             - name
@@ -334,7 +330,7 @@ components:
           x-walrus-ui:
             group: Deployment
         containers:
-          title: containers
+          title: Containers
           type: array
           description: |
             Specify the container items to deployment.
@@ -342,7 +338,7 @@ components:
             Examples:
             ```
             containers:
-            - name: string                     # unique
+            - name: string                           # unique
               profile: init/run
               image:
                 name: string
@@ -351,18 +347,18 @@ components:
                 command: list(string), optional
                 args: list(string), optional
                 working_dir: string, optional
-                as: string, optional       # i.e. non_root, user_id:group:id
+                as: string, optional                # i.e. non_root, user_id:group:id
               resources:
                 requests:
-                  cpu: number, optional        # in oneCPU, i.e. 0.25, 0.5, 1, 2, 4, 8
-                  memory: number, optional     # in megabyte
-                  gpu: number, optional        # i.e. 0.25, 0.5, 1, 2, 4, 8
+                  cpu: number, optional             # in oneCPU, i.e. 0.25, 0.5, 1, 2, 4, 8
+                  memory: number, optional          # in megabyte
+                  gpu: number, optional             # i.e. 0.25, 0.5, 1, 2, 4, 8
                 limits:
-                  cpu: number, optioanl        # in oneCPU, i.e. 0.25, 0.5, 1, 2, 4, 8
-                  memory: number, optional     # in megabyte
-                  gpu: number, optional        # i.e. 0.25, 0.5, 1, 2, 4, 8
+                  cpu: number, optioanl             # in oneCPU, i.e. 0.25, 0.5, 1, 2, 4, 8
+                  memory: number, optional          # in megabyte
+                  gpu: number, optional             # i.e. 0.25, 0.5, 1, 2, 4, 8
               envs:
-              - name: string, optional         # only work if the config.key is null
+              - name: string, optional              # only work if the config.key is null
                 type: text/config
                 text:
                   content: string
@@ -370,14 +366,14 @@ components:
                   name: string
                   key: string, optional
               mounts:
-              - path: string                   # unique
+              - path: string                        # unique
                 read_only: bool, optional
                 type: config/storage
                 config:
                   name: string
                   key: string, optional
                   mode: string, optional
-                  disable_changed: bool, optional # only work if config.key is not null
+                  disable_changed: bool, optional   # only work if config.key is not null
                 storage:
                   name: string
                   sub_path: string, optional
@@ -386,19 +382,19 @@ components:
                 external: number, optional
                 protocol: udp/tcp
               checks:
-              - initial_delay: number
-                interval: number
-                timeout: number
-                retries: number
-                teardown_unhealthy: bool
+              - initial_delay: number, optional
+                interval: number, optional
+                timeout: number, optional
+                retries: number, optional
+                teardown_unhealthy: bool, optional
                 type: execute/request
                 execute:
                   command: list(string)
                 request:
                   protocol: tcp/grpc/http/https
-                  port: string
+                  port: number
                   headers: map(string), optional
-                  path: string, optional
+                  path: string, optional             # put GRPC service name if request.protocol is grpc
             ```
           items:
             properties:
@@ -410,59 +406,52 @@ components:
                         command:
                           items:
                             type: string
-                          title: command
+                          title: Command
                           type: array
                       required:
                       - command
-                      title: execute
+                      title: Execute
                       type: object
                     initial_delay:
-                      default: 0
-                      title: initial_delay
+                      title: Initial Delay
                       type: number
                     interval:
-                      default: 10
-                      title: interval
+                      title: Interval
                       type: number
                     request:
                       properties:
                         headers:
                           additionalProperties:
                             type: string
-                          title: headers
+                          title: Headers
                           type: object
                         path:
-                          title: path
+                          title: Path
                           type: string
                         port:
-                          title: port
+                          title: Port
                           type: number
                         protocol:
-                          default: http
-                          title: protocol
+                          title: Protocol
                           type: string
                       required:
                       - port
-                      title: request
+                      title: Request
                       type: object
                     retries:
-                      default: 1
-                      title: retries
+                      title: Retries
                       type: number
                     teardown_unhealthy:
-                      default: false
-                      title: teardown_unhealthy
+                      title: Teardown Unhealthy
                       type: boolean
                     timeout:
-                      default: 1
-                      title: timeout
+                      title: Timeout
                       type: number
                     type:
-                      default: request
-                      title: type
+                      title: Type
                       type: string
                   type: object
-                title: checks
+                title: Checks
                 type: array
               envs:
                 items:
@@ -470,66 +459,64 @@ components:
                     config:
                       properties:
                         key:
-                          title: key
+                          title: Key
                           type: string
                         name:
-                          title: name
+                          title: Name
                           type: string
                       required:
                       - name
-                      title: config
+                      title: Config
                       type: object
                     name:
-                      title: name
+                      title: Name
                       type: string
                     text:
                       properties:
                         content:
-                          title: content
+                          title: Content
                           type: string
                       required:
                       - content
-                      title: text
+                      title: Text
                       type: object
                     type:
-                      default: text
-                      title: type
+                      title: Type
                       type: string
                   type: object
-                title: envs
+                title: Envs
                 type: array
               execute:
                 properties:
                   args:
                     items:
                       type: string
-                    title: args
+                    title: Args
                     type: array
                   as:
-                    title: as
+                    title: As
                     type: string
                   command:
                     items:
                       type: string
-                    title: command
+                    title: Command
                     type: array
                   working_dir:
-                    title: working_dir
+                    title: Working Dir
                     type: string
-                title: execute
+                title: Execute
                 type: object
               image:
                 properties:
                   name:
-                    title: name
+                    title: Name
                     type: string
                   pull_policy:
-                    default: IfNotPresent
-                    title: pull_policy
+                    title: Pull Policy
                     type: string
                 required:
                 - name
-                title: image
+                title: Image
                 type: object
               mounts:
                 items:
@@ -537,113 +524,101 @@ components:
                     config:
                       properties:
                         disable_changed:
-                          default: false
-                          title: disable_changed
+                          title: Disable Changed
                           type: boolean
                         key:
-                          title: key
+                          title: Key
                           type: string
                         mode:
-                          default: "0644"
-                          title: mode
+                          title: Mode
                           type: string
                         name:
-                          title: name
+                          title: Name
                           type: string
                       required:
                       - name
-                      title: config
+                      title: Config
                       type: object
                     path:
-                      title: path
+                      title: Path
                       type: string
                     read_only:
-                      default: false
-                      title: read_only
+                      title: Read Only
                       type: boolean
                     storage:
                       properties:
                         name:
-                          title: name
+                          title: Name
                           type: string
                         sub_path:
-                          title: sub_path
+                          title: Sub Path
                           type: string
                       required:
                       - name
-                      title: storage
+                      title: Storage
                       type: object
                     type:
-                      default: config
-                      title: type
+                      title: Type
                       type: string
                   required:
                   - path
                   type: object
-                title: mounts
+                title: Mounts
                 type: array
               name:
-                title: name
+                title: Name
                 type: string
               ports:
                 items:
                   properties:
                     external:
-                      title: external
+                      title: External
                       type: number
                     internal:
-                      title: internal
+                      title: Internal
                       type: number
                     protocol:
-                      default: tcp
-                      title: protocol
+                      title: Protocol
                       type: string
                   required:
                   - internal
                   type: object
-                title: ports
+                title: Ports
                 type: array
               profile:
-                default: run
-                title: profile
+                title: Profile
                 type: string
               resources:
                 properties:
                   limits:
                     properties:
                       cpu:
-                        default: 0
-                        title: cpu
+                        title: Cpu
                         type: number
                       gpu:
-                        default: 0
-                        title: gpu
+                        title: Gpu
                         type: number
                       memory:
-                        default: 0
-                        title: memory
+                        title: Memory
                         type: number
-                    title: limits
+                    title: Limits
                     type: object
                   requests:
                     properties:
                       cpu:
-                        default: 0.1
-                        title: cpu
+                        title: Cpu
                         type: number
                       gpu:
-                        default: 0
-                        title: gpu
+                        title: Gpu
                         type: number
                       memory:
-                        default: 64
-                        title: memory
+                        title: Memory
                         type: number
-                    title: requests
+                    title: Requests
                     type: object
                 required:
                 - requests
-                title: resources
+                title: Resources
                 type: object
             required:
             - image
