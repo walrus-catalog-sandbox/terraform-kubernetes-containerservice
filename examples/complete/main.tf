@@ -19,12 +19,34 @@ resource "kubernetes_namespace_v1" "example" {
   }
 }
 
+resource "kubernetes_secret_v1" "example" {
+  metadata {
+    namespace = kubernetes_namespace_v1.example.metadata[0].name
+    name      = "example"
+  }
+
+  data = {
+    "secret1" = "secret1"
+  }
+}
+
+resource "kubernetes_config_map_v1" "example" {
+  metadata {
+    namespace = kubernetes_namespace_v1.example.metadata[0].name
+    name      = "example"
+  }
+
+  data = {
+    "configmap1" = "this is refer file"
+  }
+}
+
 resource "kubernetes_persistent_volume_claim_v1" "example" {
   wait_until_bound = false
 
   metadata {
     namespace = kubernetes_namespace_v1.example.metadata[0].name
-    name      = "pv"
+    name      = "example"
   }
 
   spec {
@@ -44,250 +66,284 @@ module "this" {
     namespace = kubernetes_namespace_v1.example.metadata[0].name
   }
 
-  credentials = [
-    {
-      name = "dockerhub"
-      type = "image_registry"
-      image_registry = {
-        server   = "https://index.docker.io/v1/"
-        username = "username"
-        password = "password"
-      }
-    }
-  ]
-
-  configs = [
-    {
-      name = "data"
-      type = "data"
-      data = {
-        "data-k1" = "data-v1"
-      }
-    },
-    {
-      name = "secret"
-      type = "secret"
-      secret = {
-        "secret-k1" = "secret-v1"
-      }
-    },
-    {
-      name = "invalid-config"
-      type = "data"
-      secret = { # wrong config
-        "secret-k1" = "secret-v1"
-      }
-    }
-  ]
-
-  storages = [
-    {
-      name = "empty"
-      type = "empty"
-      empty = {
-        medium = "Memory"
-      }
-    },
-    # {
-    #   name = "nas"
-    #   type = "nas"
-    #   nas = {
-    #     server = "nfs-service.storage"
-    #     path   = "/"
-    #   }
-    # },
-    # {
-    #   name = "san-fc"
-    #   type = "san"
-    #   san = {
-    #     fs_type = "ext4"
-    #     type    = "fc"
-    #     fc = {
-    #       lun = 2
-    #       wwns = [
-    #         "500a0982991b8dc5",
-    #         "500a0982891b8dc5"
-    #       ]
-    #     }
-    #   }
-    # },
-    # {
-    #   name = "san-iscsi"
-    #   type = "san"
-    #   san = {
-    #     type = "iscsi"
-    #     iscsi = {
-    #       lun    = 2
-    #       portal = "10.0.2.15:3260"
-    #       iqn    = "iqn.2001-04.com.example:storage.kube.sys1.xyz"
-    #     }
-    #   }
-    # },
-    {
-      name = "ephemeral"
-      type = "ephemeral"
-      ephemeral = {
-        size = 1024 # 1Gi
-      }
-    },
-    {
-      name = "persistent"
-      type = "persistent"
-      persistent = {
-        name = kubernetes_persistent_volume_claim_v1.example.metadata[0].name
-      }
-    },
-    {
-      name  = "invalid-storage"
-      type  = "persistent"
-      empty = {} # wrong config
-    }
-  ]
+  deployment = {
+    timeout  = 30
+    replicas = 1
+  }
 
   containers = [
+    #
+    # Init Container
+    #
     {
-      name    = "init-container"
-      profile = "init" # init container
-      image = {
-        name = "alpine"
-      }
+      profile = "init"
+      image   = "alpine"
       execute = {
+        working_dir = "/"
         command = [
           "sh",
           "-c",
-          "echo \"$${TEST}:$${TEST_X}\" >> /opt/logs.txt; cat /opt/logs.txt"
+          "echo \"$${ENV1}:$${ENV2}\" >> /var/run/dir2/logs.txt; cat /var/run/dir2/logs.txt"
         ]
-        working_dir = "/"
       }
       envs = [
         {
-          name = "TEST"
-          type = "text"
-          text = {
-            content = "logging"
-          }
+          name  = "ENV1"
+          value = "env1" # accpet changed and restart
         },
         {
-          name = "TEST_X"
-          type = "config"
-          config = {
-            name = "data"
-            key  = "data-k1"
+          name = "ENV2"
+          value_refer = { # donot accpet changed
+            schema = "k8s:secret"
+            params = {
+              name = "example"
+              key  = "secret1"
+            }
+          }
+        },
+        { # invalid
+          name = "ENV3"
+        },
+        { # invalid
+          name  = "ENV4"
+          value = ""
+          value_refer = {
+            schema = "k8s:secret"
+            params = {
+              name = "example"
+              key  = "secret1"
+            }
+          }
+        },
+        { # invalid schema
+          name = "ENV5"
+          value_refer = {
+            schema = "secret"
+            params = {
+              name = "example"
+              key  = "secret1"
+            }
+          }
+        },
+        { # invalid schema
+          name = "ENV6"
+          value_refer = {
+            schema = "k8s:configmap"
+            params = {
+              name = "example"
+              key  = "configmap1"
+            }
+          }
+        },
+        { # invalid params
+          name = "ENV7"
+          value_refer = {
+            schema = "k8s:configmap"
+            params = {
+              name = "example"
+            }
+          }
+        }
+      ]
+      files = [
+        { # ephemeral
+          path    = "/var/run/config/file1"
+          content = "this is ephemeral file" # accept changed but not restart
+        },
+        {                                      # refer
+          path = "/var/run/config-refer/file2" # donot accpet changed
+          content_refer = {
+            schema = "k8s:configmap"
+            params = {
+              name = "example"
+              key  = "configmap1"
+            }
+          }
+        },
+        { # invalid
+          path = "/var/run/config/file3"
+        },
+        { # invalid
+          path    = "/var/run/config/file4"
+          content = "this is ephemeral file"
+          content_refer = {
+            schema = "k8s:configmap"
+            params = {
+              name = "example"
+              key  = "configmap1"
+            }
+          }
+        },
+        { # invalid schema
+          path = "/var/run/config/file5"
+          content_refer = {
+            schema = "configmap"
+            params = {
+              name = "example"
+              key  = "configmap1"
+            }
+          }
+        },
+        { # invalid params
+          path = "/var/run/config/file6"
+          content_refer = {
+            schema = "k8s:configmap"
+            params = {
+              name = "example"
+            }
           }
         }
       ]
       mounts = [
-        {
-          path = "/var/stg/empty"
-          type = "storage"
-          storage = {
-            name = "empty"
+        {                        # ephemeral
+          path = "/var/run/dir1" # exclusively by this container
+        },
+        { # ephemeral
+          path   = "/var/run/dir2"
+          volume = "data" # shared between containers
+        },
+        { # refer
+          path = "/var/run/dir3"
+          volume_refer = {
+            schema = "k8s:configmap"
+            params = {
+              name = "example"
+            }
           }
         },
-        {
-          path = "/opt"
-          type = "storage"
-          storage = {
-            name = "ephemeral"
+        { # invalid
+          path   = "/var/run/app/dir4"
+          volume = "data"
+          volume_refer = {
+            schema = "k8s:configmap"
+            params = {
+              name = "example"
+            }
           }
         },
-        {
-          path = "/var/stg/persistent"
-          type = "storage"
-          storage = {
-            name = "persistent"
+        { # invalid schema
+          path = "/var/run/app/dir5"
+          volume_refer = {
+            schema = "configmap"
+            params = {
+              name = "example"
+            }
           }
-        }
+        },
       ]
     },
+
+    #
+    # Run Container
+    #
     {
-      name = "run-container"
-      image = {
-        name = "grafana/grafana:latest"
-      }
-      execute = {
-        as = "non_root"
-      }
+      image = "nginx:alpine"
       resources = {
-        requests = {
-          cpu    = 0.25
-          memory = 750 # Mi
-        }
-        limits = {
-          cpu    = 1
-          memory = 1024 # Mi
-        }
+        cpu    = 1
+        memory = 1024 # Mi
       }
-      envs = [
+      files = [
         {
-          type = "config"
-          config = {
-            name = "data"
-          }
+          path    = "/usr/share/nginx/html/index.html"
+          content = <<-EOF
+<html>
+  <h1>Hi</h1>
+  </br>
+  <h1>This is first running nginx.</h1>
+</html
+EOF
         }
       ]
       ports = [
         {
-          internal = 3000
-        }
-      ]
-      mounts = [
-        {
-          path = "/var/cfg/data/k1_changed"
-          type = "config"
-          config = {
-            name = "data"
-            key  = "data-k1"
-          }
+          internal = 80
+          protocol = "UDP"
+        },
+        { # override the previous one
+          internal = 80
+          protocol = "TCP"
         },
         {
-          path = "/var/cfg/data/k1_changed_alias"
-          type = "config"
-          config = {
-            name = "data"
-            key  = "data-k1"
-          }
-        },
-        {
-          path = "/var/cfg/data/k1_nochanged"
-          type = "config"
-          config = {
-            name            = "data"
-            key             = "data-k1"
-            disable_changed = true
-          }
-        },
-        {
-          path = "/var/cfg/secret"
-          type = "config"
-          config = {
-            name = "secret"
-          }
+          internal = 8080
+          protocol = "TCP"
         }
       ]
       checks = [
-        {
-          initial_delay = 10
-          retries       = 3
-          interval      = 30
-          timeout       = 2
-          type          = "request"
-          request = {
-            protocol = "http"
-            path     = "/robots.txt"
-            port     = 3000
+        { # startup probe
+          type  = "http"
+          delay = 10
+          http = {
+            port = 80
           }
         },
-        {
-          retries            = 3
-          interval           = 10
-          timeout            = 1
-          teardown_unhealthy = true
-          type               = "request"
-          request = {
-            protocol = "tcp"
-            port     = 3000
+        { # readiness probe
+          type = "tcp"
+          tcp = {
+            port = 80
           }
+        },
+        { # liveness probe
+          type     = "exec"
+          teardown = true
+          exec = {
+            command = ["curl", "http://localhost"]
+          }
+        },
+        { # invalid
+          type = "exec"
+          tcp = {
+            port = 80
+          }
+        }
+      ]
+    },
+    {
+      image = "nginx"
+      envs = [
+        {
+          name  = "NGINX_PORT"
+          value = "8080"
+        }
+      ]
+      files = [
+        {
+          path    = "/usr/share/nginx/html/index.html"
+          content = <<-EOF
+<html>
+  <h1>Hi</h1>
+  </br>
+  <h1>This is second running nginx.</h1>
+</html
+EOF
+        },
+        {
+          path    = "/etc/nginx/templates/default.conf.template"
+          content = <<-EOF
+server {
+  listen       $${NGINX_PORT};
+  server_name  localhost;
+  location / {
+      root   /usr/share/nginx/html;
+      index  index.html index.htm;
+  }
+  location = /50x.html {
+      root   /usr/share/nginx/html;
+  }
+}
+EOF
+        }
+      ]
+      mounts = [
+        { # ephemeral
+          path   = "/test"
+          volume = "data" # shared between containers
+        }
+      ]
+      ports = [
+        { # override the previous container's specification
+          internal = 8080
+          external = 80 # expose
+          protocol = "TCP"
         }
       ]
     }

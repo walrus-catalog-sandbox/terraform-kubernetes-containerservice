@@ -3,10 +3,7 @@
 ```bash
 # setup infra
 $ tf apply -auto-approve \
-  -target=kubernetes_namespace_v1.example \
-  -target=kubernetes_secert_v1.example \
-  -target=kubernetes_config_map_v1.example \
-  -target=kubernetes_persistent_volume_claim_v1.example
+  -target=kubernetes_namespace_v1.example
 
 # create service
 $ tf apply -auto-approve
@@ -36,10 +33,7 @@ $ tf apply -auto-approve
 
 | Name | Type |
 |------|------|
-| [kubernetes_config_map_v1.example](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/config_map_v1) | resource |
 | [kubernetes_namespace_v1.example](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/namespace_v1) | resource |
-| [kubernetes_persistent_volume_claim_v1.example](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/persistent_volume_claim_v1) | resource |
-| [kubernetes_secret_v1.example](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
 
 ## Inputs
 

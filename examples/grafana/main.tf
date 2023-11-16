@@ -15,7 +15,7 @@ provider "kubernetes" {
 
 resource "kubernetes_namespace_v1" "example" {
   metadata {
-    name = "nginx-svc"
+    name = "grafana-svc"
   }
 }
 
@@ -27,54 +27,45 @@ module "this" {
   }
 
   deployment = {
-    replicas = 2
-    sysctls = [
-      {
-        name  = "net.ipv4.tcp_syncookies"
-        value = "1"
-      }
-    ]
+    timeout = 30
   }
 
   containers = [
     {
-      image = "nginx:alpine"
-      resources = {
-        cpu    = 0.1
-        memory = 100 # Mi
+      image = "grafana/grafana:latest"
+      execute = {
+        as_user = 472 # start as grafana user
       }
-      files = [
-        {
-          path    = "/usr/share/nginx/html/index.html"
-          content = <<-EOF
-<html>
-  <h1>Hi</h1>
-  </br>
-  <h1>Welcome to Kubernetes Container Service.</h1>
-</html
-EOF
-        }
-      ]
+      resources = {
+        cpu    = 1
+        memory = 1024 # Mi
+      }
       ports = [
         {
-          internal = 80
-          external = 80 # publish
-          protocol = "tcp"
+          internal = 3000
+          external = 3000
         }
       ]
       checks = [
         {
-          type  = "http"
-          delay = 10
+          type     = "http"
+          delay    = 10
+          retries  = 3
+          interval = 30
+          timeout  = 2
           http = {
-            port = 80
+            port = 3000
+            path = "/robots.txt"
           }
         },
         {
           type     = "http"
+          retries  = 3
+          interval = 10
+          timeout  = 1
           teardown = true
           http = {
-            port = 80
+            port = 3000
           }
         }
       ]

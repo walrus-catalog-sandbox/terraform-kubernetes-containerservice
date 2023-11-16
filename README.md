@@ -13,40 +13,40 @@ module "example" {
   }
 
   deployment = {
-    timeout: 30                     # in seconds
-    replicas: 1
-    update_strategy:
-      type = rolling
-      rolling = {
-        max_surge       = 0.25      # 0 < max_surge < 1
-        max_unavailable = 0.25      # 0 < max_unavailable < 1
-      }
+    timeout  = 30                     # in seconds
+    replicas = 1
+    rolling = {
+      max_surge       = 0.25         # 0 < max_surge < 1
+      max_unavailable = 0.25         # 0 < max_unavailable < 1
+    }
   }
 
   containers = [
     {
-      name = "nginx"
-      image = {
-        name = "nginx:alpine"
-        pull_policy = "Always"
-      }
+      image     = "nginx:alpine"
       resources = {
-        requests = {
-          cpu = 0.1
-          memory = 100              # in megabyte
-        }
+        cpu    = 0.1
+        memory = 100                 # in megabyte
       }
       ports = [
         {
           internal = 80
+          external = 80
         }
       ]
       checks = [
         {
-          initial_delay = 10
-          type = "request"
-          request = {
-            protocol = "http"
+          delay = 10
+          type  = "http"
+          http = {
+            port = 80
+          }
+        }
+        {
+          delay    = 10
+          teardown = true
+          type     = "http"
+          http = {
             port = 80
           }
         }
@@ -59,6 +59,7 @@ module "example" {
 ## Examples
 
 - [Complete](./examples/complete)
+- [Grafana](./examples/grafana)
 - [Nginx](./examples/nginx)
 - [WordPress](./examples/wordpress)
 
@@ -88,10 +89,8 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [kubernetes_config_map_v1.configs](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/config_map_v1) | resource |
+| [kubernetes_config_map_v1.ephemeral_files](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/config_map_v1) | resource |
 | [kubernetes_deployment_v1.deployment](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/deployment_v1) | resource |
-| [kubernetes_secret_v1.configs](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
-| [kubernetes_secret_v1.image_registry_credentials](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
 | [kubernetes_service_v1.service](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/service_v1) | resource |
 
 ## Inputs
@@ -100,11 +99,8 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_context"></a> [context](#input\_context) | Receive contextual information. When Walrus deploys, Walrus will inject specific contextual information into this field.<br><br>Examples:<pre>context:<br>  project:<br>    name: string<br>    id: string<br>  environment:<br>    name: string<br>    id: string<br>  resource:<br>    name: string<br>    id: string</pre> | `map(any)` | `{}` | no |
 | <a name="input_infrastructure"></a> [infrastructure](#input\_infrastructure) | Specify the infrastructure information for deploying.<br><br>Examples:<pre>infrastructure:<br>  namespace: string, optional<br>  gpu_vendor: string, optional<br>  domain_suffix: string, optional</pre> | <pre>object({<br>    namespace     = optional(string)<br>    gpu_vendor    = optional(string, "nvidia.com")<br>    domain_suffix = optional(string, "cluster.local")<br>  })</pre> | `{}` | no |
-| <a name="input_deployment"></a> [deployment](#input\_deployment) | Specify the deployment action, like scaling, scheduling, security and so on.<br><br>Examples:<pre>deployment:<br>  timeout: number, optional<br>  replicas: 1<br>  update_strategy:<br>    type: recreate/rolling<br>    recreate: {}<br>    rolling: <br>      max_surge: number, optional        # in fraction, i.e. 0.25, 0.5, 1<br>      max_unavailable: number, optional  # in fraction, i.e. 0.25, 0.5, 1<br>  system_controls:<br>  - name: string<br>    value: string</pre> | <pre>object({<br>    timeout  = optional(number)<br>    replicas = optional(number, 1)<br>    update_strategy = optional(object({<br>      type     = optional(string, "rolling")<br>      recreate = optional(object({}), {})<br>      rolling = optional(object({<br>        max_surge       = optional(number, 0.25)<br>        max_unavailable = optional(number, 0.25)<br>      }))<br>    }))<br>    system_controls = optional(list(object({<br>      name  = string<br>      value = string<br>    })))<br>  })</pre> | <pre>{<br>  "replicas": 1,<br>  "timeout": 0,<br>  "update_strategy": {<br>    "rolling": {<br>      "max_surge": 0.25,<br>      "max_unavailable": 0.25<br>    },<br>    "type": "rolling"<br>  }<br>}</pre> | no |
-| <a name="input_credentials"></a> [credentials](#input\_credentials) | Specify the credential items to fetch private data, like an internal image registry.<br><br>Examples:<pre>credentials:<br>- name: string                           # unique<br>  type: image_registry<br>  image_registry: <br>    server: string<br>    username: string<br>    password: string<br>    email: string, optional</pre> | <pre>list(object({<br>    name = string<br>    type = optional(string, "image_registry")<br>    image_registry = optional(object({<br>      server   = string<br>      username = string<br>      password = string<br>      email    = optional(string)<br>    }))<br>  }))</pre> | `[]` | no |
-| <a name="input_configs"></a> [configs](#input\_configs) | Specify the configuration items to configure containers, either raw or sensitive data.<br><br>Examples:<pre>configs:<br>- name: string                           # unique<br>  type: data                             # convert to config map<br>  data: <br>    (key: string): string<br>- name: string<br>  type: secret                           # convert to secret<br>  secret:<br>    (key: string): string</pre> | <pre>list(object({<br>    name   = string<br>    type   = optional(string, "data")<br>    data   = optional(map(string))<br>    secret = optional(map(string))<br>  }))</pre> | `[]` | no |
-| <a name="input_storages"></a> [storages](#input\_storages) | Specify the storage items to mount containers.<br><br>Examples:<pre>storages:<br>- name: string                           # unique<br>  type: empty                            # convert ot empty_dir volume<br>  empty:<br>    medium: string, optional<br>    size: number, optional               # in megabyte<br>- name: string<br>  type: nas                              # convert to in-tree nfs volume<br>  nas:<br>    read_only: bool, optional<br>    server: string<br>    path: string, optional<br>    username: string, optional<br>    password: string, optional<br>- name: string<br>  type: san                              # convert to in-tree fc or iscsi volume<br>  san:<br>    read_only: bool, optional<br>    fs_type: string, optional<br>    type: fc/iscsi<br>    fc: <br>      lun: number<br>      wwns: list(string)<br>    iscsi<br>      lun: number, optional<br>      portal: string<br>      iqn: string<br>- name: string<br>  type: ephemeral                         # convert to dynamic volume claim template<br>  ephemeral:<br>    class: string, optional<br>    access_mode: string, optional<br>    size: number, optional                # in megabyte<br>- name: string<br>  type: persistent                        # convert to existing volume claim template<br>  persistent:<br>    read_only: bool, optional<br>    name: string                          # the name of persistent volume claim</pre> | <pre>list(object({<br>    name = string<br>    type = optional(string, "empty")<br>    empty = optional(object({<br>      medium = optional(string)<br>      size   = optional(number)<br>    }))<br>    nas = optional(object({<br>      read_only = optional(bool, false)<br>      server    = string<br>      path      = optional(string, "/")<br>      username  = optional(string)<br>      password  = optional(string)<br>    }))<br>    san = optional(object({<br>      read_only = optional(bool, false)<br>      fs_type   = optional(string, "ext4")<br>      type      = string<br>      fc = optional(object({<br>        lun  = optional(number, 0)<br>        wwns = list(string)<br>      }))<br>      iscsi = optional(object({<br>        lun    = optional(number, 0)<br>        portal = string<br>        iqn    = string<br>      }))<br>    }))<br>    ephemeral = optional(object({<br>      class       = optional(string)<br>      access_mode = optional(string, "ReadWriteOnce")<br>      size        = number<br>    }))<br>    persistent = optional(object({<br>      read_only = optional(bool, false)<br>      name      = string<br>    }))<br>  }))</pre> | `[]` | no |
-| <a name="input_containers"></a> [containers](#input\_containers) | Specify the container items to deployment.<br><br>Examples:<pre>containers:<br>- name: string                           # unique<br>  profile: init/run<br>  image:<br>    name: string<br>    pull_policy: string, optional<br>  execute:<br>    command: list(string), optional<br>    args: list(string), optional<br>    working_dir: string, optional<br>    as: string, optional                # i.e. non_root, user_id:group:id<br>  resources:<br>    requests:<br>      cpu: number, optional             # in oneCPU, i.e. 0.25, 0.5, 1, 2, 4, 8<br>      memory: number, optional          # in megabyte<br>      gpu: number, optional             # i.e. 0.25, 0.5, 1, 2, 4, 8<br>    limits:<br>      cpu: number, optioanl             # in oneCPU, i.e. 0.25, 0.5, 1, 2, 4, 8<br>      memory: number, optional          # in megabyte<br>      gpu: number, optional             # i.e. 0.25, 0.5, 1, 2, 4, 8<br>  envs:<br>  - name: string, optional              # only work if the config.key is null<br>    type: text/config<br>    text:<br>      content: string<br>    config:<br>      name: string<br>      key: string, optional<br>  mounts:<br>  - path: string                        # unique<br>    read_only: bool, optional<br>    type: config/storage<br>    config:<br>      name: string<br>      key: string, optional<br>      mode: string, optional<br>      disable_changed: bool, optional   # only work if config.key is not null<br>    storage:<br>      name: string<br>      sub_path: string, optional<br>  ports:<br>  - internal: number<br>    external: number, optional<br>    protocol: udp/tcp<br>  checks:<br>  - initial_delay: number, optional<br>    interval: number, optional<br>    timeout: number, optional<br>    retries: number, optional<br>    teardown_unhealthy: bool, optional<br>    type: execute/request<br>    execute:<br>      command: list(string)<br>    request:<br>      protocol: tcp/grpc/http/https<br>      port: number<br>      headers: map(string), optional<br>      path: string, optional             # put GRPC service name if request.protocol is grpc</pre> | <pre>list(object({<br>    name    = string<br>    profile = optional(string, "run")<br>    image = object({<br>      name        = string<br>      pull_policy = optional(string, "IfNotPresent")<br>    })<br>    execute = optional(object({<br>      command     = optional(list(string))<br>      args        = optional(list(string))<br>      working_dir = optional(string)<br>      as          = optional(string)<br>    }))<br>    resources = optional(object({<br>      requests = object({<br>        cpu    = optional(number, 0.1)<br>        memory = optional(number, 64)<br>        gpu    = optional(number, 0)<br>      })<br>      limits = optional(object({<br>        cpu    = optional(number, 0)<br>        memory = optional(number, 0)<br>        gpu    = optional(number, 0)<br>      }))<br>    }))<br>    envs = optional(list(object({<br>      name = optional(string)<br>      type = optional(string, "text")<br>      text = optional(object({<br>        content = string<br>      }))<br>      config = optional(object({<br>        name = string<br>        key  = optional(string)<br>      }))<br>    })))<br>    mounts = optional(list(object({<br>      path      = string<br>      read_only = optional(bool, false)<br>      type      = optional(string, "config")<br>      config = optional(object({<br>        name            = string<br>        key             = optional(string)<br>        mode            = optional(string, "0644")<br>        disable_changed = optional(bool, false)<br>      }))<br>      storage = optional(object({<br>        name     = string<br>        sub_path = optional(string)<br>      }))<br>    })))<br>    ports = optional(list(object({<br>      internal = number<br>      external = optional(number)<br>      protocol = optional(string, "tcp")<br>    })))<br>    checks = optional(list(object({<br>      initial_delay      = optional(number, 0)<br>      interval           = optional(number, 10)<br>      timeout            = optional(number, 1)<br>      retries            = optional(number, 1)<br>      teardown_unhealthy = optional(bool, false)<br>      type               = optional(string, "request")<br>      execute = optional(object({<br>        command = list(string)<br>      }))<br>      request = optional(object({<br>        protocol = optional(string, "http")<br>        port     = number<br>        headers  = optional(map(string))<br>        path     = optional(string)<br>      }))<br>    })))<br>  }))</pre> | n/a | yes |
+| <a name="input_deployment"></a> [deployment](#input\_deployment) | Specify the deployment action, like scaling, scheduling, security and so on.<br><br>Examples:<pre>deployment:<br>  timeout: number, optional<br>  replicas: number, optional<br>  rolling: <br>    max_surge: number, optional          # in fraction, i.e. 0.25, 0.5, 1<br>    max_unavailable: number, optional    # in fraction, i.e. 0.25, 0.5, 1<br>  fs_group: number, optional<br>  sysctls:<br>  - name: string<br>    value: string</pre> | <pre>object({<br>    timeout  = optional(number, 0)<br>    replicas = optional(number, 1)<br>    rolling = optional(object({<br>      max_surge       = optional(number, 0.25)<br>      max_unavailable = optional(number, 0.25)<br>    }))<br>    fs_group = optional(number)<br>    sysctls = optional(list(object({<br>      name  = string<br>      value = string<br>    })))<br>  })</pre> | <pre>{<br>  "replicas": 1,<br>  "rolling": {<br>    "max_surge": 0.25,<br>    "max_unavailable": 0.25<br>  },<br>  "timeout": 0<br>}</pre> | no |
+| <a name="input_containers"></a> [containers](#input\_containers) | Specify the container items to deploy.<br><br>Examples:<pre>containers:<br>- profile: init/run<br>  image: string<br>  execute:<br>    working_dir: string, optional<br>    command: list(string), optional<br>    args: list(string), optional<br>    readonly_rootfs: bool, optional<br>    as_user: number, optional<br>    as_group: number, optional<br>  resources:<br>    cpu: number, optional               # in oneCPU, i.e. 0.25, 0.5, 1, 2, 4<br>    memory: number, optional            # in megabyte<br>    gpu: number, optional               # in oneGPU, i.e. 1, 2, 4<br>  envs:<br>  - name: string<br>    value: string, optional             # accpet changed and restart<br>    value_refer:                        # donot accpet changed<br>      schema: string<br>      params: map(any)<br>  files:<br>  - path: string<br>    mode: string, optional<br>    content: string, optional           # accpet changed but not restart<br>    content_refer:                      # donot accpet changed<br>      schema: string<br>      params: map(any)<br>  mounts:<br>  - path: string<br>    readonly: bool, optional<br>    subpath: string, optional<br>    volume: string, optional            # shared between containers if named, otherwise exclusively by this container<br>    volume_refer:<br>      schema: string<br>      params: map(any)<br>  ports:<br>  - internal: number<br>    external: number, optional<br>    protocol: tcp/udp/sctp<br>  checks:<br>  - type: execute/tcp/grpc/http/https<br>    delay: number, optional<br>    interval: number, optional<br>    timeout: number, optional<br>    retries: number, optional<br>    teardown: bool, optional<br>    execute:<br>      command: list(string)<br>    tcp:<br>      port: number<br>    grpc:<br>      port: number<br>      service: string, optional<br>    http:<br>      port: number<br>      headers: map(string), optional<br>      path: string, optional<br>    https:<br>      port: number<br>      headers: map(string), optional<br>      path: string, optional</pre> | <pre>list(object({<br>    profile = optional(string, "run")<br>    image   = string<br>    execute = optional(object({<br>      working_dir     = optional(string)<br>      command         = optional(list(string))<br>      args            = optional(list(string))<br>      readonly_rootfs = optional(bool, false)<br>      as_user         = optional(number)<br>      as_group        = optional(number)<br>    }))<br>    resources = optional(object({<br>      cpu    = optional(number, 0.25)<br>      memory = optional(number, 256)<br>      gpu    = optional(number)<br>    }))<br>    envs = optional(list(object({<br>      name  = string<br>      value = optional(string)<br>      value_refer = optional(object({<br>        schema = string<br>        params = map(any)<br>      }))<br>    })))<br>    files = optional(list(object({<br>      path    = string<br>      mode    = optional(string, "0644")<br>      content = optional(string)<br>      content_refer = optional(object({<br>        schema = string<br>        params = map(any)<br>      }))<br>    })))<br>    mounts = optional(list(object({<br>      path     = string<br>      readonly = optional(bool, false)<br>      subpath  = optional(string)<br>      volume   = optional(string)<br>      volume_refer = optional(object({<br>        schema = string<br>        params = map(any)<br>      }))<br>    })))<br>    ports = optional(list(object({<br>      internal = number<br>      external = optional(number)<br>      protocol = optional(string, "tcp")<br>    })))<br>    checks = optional(list(object({<br>      type     = string<br>      delay    = optional(number, 0)<br>      interval = optional(number, 10)<br>      timeout  = optional(number, 1)<br>      retries  = optional(number, 1)<br>      teardown = optional(bool, false)<br>      execute = optional(object({<br>        command = list(string)<br>      }))<br>      tcp = optional(object({<br>        port = number<br>      }))<br>      grpc = optional(object({<br>        port    = number<br>        service = optional(string)<br>      }))<br>      http = optional(object({<br>        port    = number<br>        headers = optional(map(string))<br>        path    = optional(string, "/")<br>      }))<br>      https = optional(object({<br>        port    = number<br>        headers = optional(map(string))<br>        path    = optional(string, "/")<br>      }))<br>    })))<br>  }))</pre> | n/a | yes |
 
 ## Outputs
 

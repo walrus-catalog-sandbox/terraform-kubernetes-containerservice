@@ -60,30 +60,25 @@ Examples:
 ```
 deployment:
   timeout: number, optional
-  replicas: 1
-  update_strategy:
-    type: recreate/rolling
-    recreate: {}
-    rolling: 
-      max_surge: number, optional        # in fraction, i.e. 0.25, 0.5, 1
-      max_unavailable: number, optional  # in fraction, i.e. 0.25, 0.5, 1
-  system_controls:
+  replicas: number, optional
+  rolling: 
+    max_surge: number, optional          # in fraction, i.e. 0.25, 0.5, 1
+    max_unavailable: number, optional    # in fraction, i.e. 0.25, 0.5, 1
+  fs_group: number, optional
+  sysctls:
   - name: string
     value: string
 ```
 EOF
   type = object({
-    timeout  = optional(number)
+    timeout  = optional(number, 0)
     replicas = optional(number, 1)
-    update_strategy = optional(object({
-      type     = optional(string, "rolling")
-      recreate = optional(object({}), {})
-      rolling = optional(object({
-        max_surge       = optional(number, 0.25)
-        max_unavailable = optional(number, 0.25)
-      }))
+    rolling = optional(object({
+      max_surge       = optional(number, 0.25)
+      max_unavailable = optional(number, 0.25)
     }))
-    system_controls = optional(list(object({
+    fs_group = optional(number)
+    sysctls = optional(list(object({
       name  = string
       value = string
     })))
@@ -91,281 +86,123 @@ EOF
   default = {
     timeout  = 0
     replicas = 1
-    update_strategy = {
-      type = "rolling"
-      rolling = {
-        max_surge       = 0.25
-        max_unavailable = 0.25
-      }
+    rolling = {
+      max_surge       = 0.25
+      max_unavailable = 0.25
     }
   }
 }
 
-#
-# Prerequisite Fields
-#
-
-variable "credentials" {
-  description = <<-EOF
-Specify the credential items to fetch private data, like an internal image registry.
-
-Examples:
-```
-credentials:
-- name: string                           # unique
-  type: image_registry
-  image_registry: 
-    server: string
-    username: string
-    password: string
-    email: string, optional
-```
-EOF
-  type = list(object({
-    name = string
-    type = optional(string, "image_registry")
-    image_registry = optional(object({
-      server   = string
-      username = string
-      password = string
-      email    = optional(string)
-    }))
-  }))
-  default = []
-}
-
-variable "configs" {
-  description = <<-EOF
-Specify the configuration items to configure containers, either raw or sensitive data.
-
-Examples:
-```
-configs:
-- name: string                           # unique
-  type: data                             # convert to config map
-  data: 
-    (key: string): string
-- name: string
-  type: secret                           # convert to secret
-  secret:
-    (key: string): string
-```
-EOF
-  type = list(object({
-    name   = string
-    type   = optional(string, "data")
-    data   = optional(map(string))
-    secret = optional(map(string))
-  }))
-  default = []
-}
-
-variable "storages" {
-  description = <<-EOF
-Specify the storage items to mount containers.
-
-Examples:
-```
-storages:
-- name: string                           # unique
-  type: empty                            # convert ot empty_dir volume
-  empty:
-    medium: string, optional
-    size: number, optional               # in megabyte
-- name: string
-  type: nas                              # convert to in-tree nfs volume
-  nas:
-    read_only: bool, optional
-    server: string
-    path: string, optional
-    username: string, optional
-    password: string, optional
-- name: string
-  type: san                              # convert to in-tree fc or iscsi volume
-  san:
-    read_only: bool, optional
-    fs_type: string, optional
-    type: fc/iscsi
-    fc: 
-      lun: number
-      wwns: list(string)
-    iscsi
-      lun: number, optional
-      portal: string
-      iqn: string
-- name: string
-  type: ephemeral                         # convert to dynamic volume claim template
-  ephemeral:
-    class: string, optional
-    access_mode: string, optional
-    size: number, optional                # in megabyte
-- name: string
-  type: persistent                        # convert to existing volume claim template
-  persistent:
-    read_only: bool, optional
-    name: string                          # the name of persistent volume claim
-```
-EOF
-  type = list(object({
-    name = string
-    type = optional(string, "empty")
-    empty = optional(object({
-      medium = optional(string)
-      size   = optional(number)
-    }))
-    nas = optional(object({
-      read_only = optional(bool, false)
-      server    = string
-      path      = optional(string, "/")
-      username  = optional(string)
-      password  = optional(string)
-    }))
-    san = optional(object({
-      read_only = optional(bool, false)
-      fs_type   = optional(string, "ext4")
-      type      = string
-      fc = optional(object({
-        lun  = optional(number, 0)
-        wwns = list(string)
-      }))
-      iscsi = optional(object({
-        lun    = optional(number, 0)
-        portal = string
-        iqn    = string
-      }))
-    }))
-    ephemeral = optional(object({
-      class       = optional(string)
-      access_mode = optional(string, "ReadWriteOnce")
-      size        = number
-    }))
-    persistent = optional(object({
-      read_only = optional(bool, false)
-      name      = string
-    }))
-  }))
-  default = []
-}
-
-#
-# Main Fields
-#
-
 variable "containers" {
   description = <<-EOF
-Specify the container items to deployment.
+Specify the container items to deploy.
 
 Examples:
 ```
 containers:
-- name: string                           # unique
-  profile: init/run
-  image:
-    name: string
-    pull_policy: string, optional
+- profile: init/run
+  image: string
   execute:
+    working_dir: string, optional
     command: list(string), optional
     args: list(string), optional
-    working_dir: string, optional
-    as: string, optional                # i.e. non_root, user_id:group:id
+    readonly_rootfs: bool, optional
+    as_user: number, optional
+    as_group: number, optional
   resources:
-    requests:
-      cpu: number, optional             # in oneCPU, i.e. 0.25, 0.5, 1, 2, 4, 8
-      memory: number, optional          # in megabyte
-      gpu: number, optional             # i.e. 0.25, 0.5, 1, 2, 4, 8
-    limits:
-      cpu: number, optioanl             # in oneCPU, i.e. 0.25, 0.5, 1, 2, 4, 8
-      memory: number, optional          # in megabyte
-      gpu: number, optional             # i.e. 0.25, 0.5, 1, 2, 4, 8
+    cpu: number, optional               # in oneCPU, i.e. 0.25, 0.5, 1, 2, 4
+    memory: number, optional            # in megabyte
+    gpu: number, optional               # in oneGPU, i.e. 1, 2, 4
   envs:
-  - name: string, optional              # only work if the config.key is null
-    type: text/config
-    text:
-      content: string
-    config:
-      name: string
-      key: string, optional
+  - name: string
+    value: string, optional             # accpet changed and restart
+    value_refer:                        # donot accpet changed
+      schema: string
+      params: map(any)
+  files:
+  - path: string
+    mode: string, optional
+    content: string, optional           # accpet changed but not restart
+    content_refer:                      # donot accpet changed
+      schema: string
+      params: map(any)
   mounts:
-  - path: string                        # unique
-    read_only: bool, optional
-    type: config/storage
-    config:
-      name: string
-      key: string, optional
-      mode: string, optional
-      disable_changed: bool, optional   # only work if config.key is not null
-    storage:
-      name: string
-      sub_path: string, optional
+  - path: string
+    readonly: bool, optional
+    subpath: string, optional
+    volume: string, optional            # shared between containers if named, otherwise exclusively by this container
+    volume_refer:
+      schema: string
+      params: map(any)
   ports:
   - internal: number
     external: number, optional
-    protocol: udp/tcp
+    protocol: tcp/udp/sctp
   checks:
-  - initial_delay: number, optional
+  - type: execute/tcp/grpc/http/https
+    delay: number, optional
     interval: number, optional
     timeout: number, optional
     retries: number, optional
-    teardown_unhealthy: bool, optional
-    type: execute/request
+    teardown: bool, optional
     execute:
       command: list(string)
-    request:
-      protocol: tcp/grpc/http/https
+    tcp:
+      port: number
+    grpc:
+      port: number
+      service: string, optional
+    http:
       port: number
       headers: map(string), optional
-      path: string, optional             # put GRPC service name if request.protocol is grpc
+      path: string, optional
+    https:
+      port: number
+      headers: map(string), optional
+      path: string, optional
 ```
 EOF
   type = list(object({
-    name    = string
     profile = optional(string, "run")
-    image = object({
-      name        = string
-      pull_policy = optional(string, "IfNotPresent")
-    })
+    image   = string
     execute = optional(object({
-      command     = optional(list(string))
-      args        = optional(list(string))
-      working_dir = optional(string)
-      as          = optional(string)
+      working_dir     = optional(string)
+      command         = optional(list(string))
+      args            = optional(list(string))
+      readonly_rootfs = optional(bool, false)
+      as_user         = optional(number)
+      as_group        = optional(number)
     }))
     resources = optional(object({
-      requests = object({
-        cpu    = optional(number, 0.1)
-        memory = optional(number, 64)
-        gpu    = optional(number, 0)
-      })
-      limits = optional(object({
-        cpu    = optional(number, 0)
-        memory = optional(number, 0)
-        gpu    = optional(number, 0)
-      }))
+      cpu    = optional(number, 0.25)
+      memory = optional(number, 256)
+      gpu    = optional(number)
     }))
     envs = optional(list(object({
-      name = optional(string)
-      type = optional(string, "text")
-      text = optional(object({
-        content = string
+      name  = string
+      value = optional(string)
+      value_refer = optional(object({
+        schema = string
+        params = map(any)
       }))
-      config = optional(object({
-        name = string
-        key  = optional(string)
+    })))
+    files = optional(list(object({
+      path    = string
+      mode    = optional(string, "0644")
+      content = optional(string)
+      content_refer = optional(object({
+        schema = string
+        params = map(any)
       }))
     })))
     mounts = optional(list(object({
-      path      = string
-      read_only = optional(bool, false)
-      type      = optional(string, "config")
-      config = optional(object({
-        name            = string
-        key             = optional(string)
-        mode            = optional(string, "0644")
-        disable_changed = optional(bool, false)
-      }))
-      storage = optional(object({
-        name     = string
-        sub_path = optional(string)
+      path     = string
+      readonly = optional(bool, false)
+      subpath  = optional(string)
+      volume   = optional(string)
+      volume_refer = optional(object({
+        schema = string
+        params = map(any)
       }))
     })))
     ports = optional(list(object({
@@ -374,20 +211,31 @@ EOF
       protocol = optional(string, "tcp")
     })))
     checks = optional(list(object({
-      initial_delay      = optional(number, 0)
-      interval           = optional(number, 10)
-      timeout            = optional(number, 1)
-      retries            = optional(number, 1)
-      teardown_unhealthy = optional(bool, false)
-      type               = optional(string, "request")
+      type     = string
+      delay    = optional(number, 0)
+      interval = optional(number, 10)
+      timeout  = optional(number, 1)
+      retries  = optional(number, 1)
+      teardown = optional(bool, false)
       execute = optional(object({
         command = list(string)
       }))
-      request = optional(object({
-        protocol = optional(string, "http")
-        port     = number
-        headers  = optional(map(string))
-        path     = optional(string)
+      tcp = optional(object({
+        port = number
+      }))
+      grpc = optional(object({
+        port    = number
+        service = optional(string)
+      }))
+      http = optional(object({
+        port    = number
+        headers = optional(map(string))
+        path    = optional(string, "/")
+      }))
+      https = optional(object({
+        port    = number
+        headers = optional(map(string))
+        path    = optional(string, "/")
       }))
     })))
   }))

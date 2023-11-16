@@ -24,7 +24,7 @@ resource "kubernetes_persistent_volume_claim_v1" "example" {
 
   metadata {
     namespace = kubernetes_namespace_v1.example.metadata[0].name
-    name      = "pv"
+    name      = "mysql-data"
   }
 
   spec {
@@ -37,6 +37,50 @@ resource "kubernetes_persistent_volume_claim_v1" "example" {
   }
 }
 
+resource "kubernetes_secret_v1" "example" {
+  metadata {
+    namespace = kubernetes_namespace_v1.example.metadata[0].name
+    name      = "mysql-secret"
+  }
+
+  data = {
+    database = "wordpress"
+    username = "myuser"
+    password = "mypass"
+  }
+}
+
+locals {
+  volume_refer_database_data = {
+    schema = "k8s:pesistentvolumeclaim"
+    params = {
+      name = kubernetes_persistent_volume_claim_v1.example.metadata[0].name
+    }
+  }
+
+  env_refer_database_name = {
+    schema = "k8s:secret"
+    params = {
+      name = kubernetes_secret_v1.example.metadata[0].name
+      key  = "database"
+    }
+  }
+  env_refer_database_username = {
+    schema = "k8s:secret"
+    params = {
+      name = kubernetes_secret_v1.example.metadata[0].name
+      key  = "username"
+    }
+  }
+  env_refer_database_password = {
+    schema = "k8s:secret"
+    params = {
+      name = kubernetes_secret_v1.example.metadata[0].name
+      key  = "password"
+    }
+  }
+}
+
 module "this" {
   source = "../.."
 
@@ -44,130 +88,70 @@ module "this" {
     namespace = kubernetes_namespace_v1.example.metadata[0].name
   }
 
-  storages = [
-    {
-      name = "data"
-      type = "persistent"
-      persistent = {
-        name = kubernetes_persistent_volume_claim_v1.example.metadata[0].name
-      }
-    },
-    {
-      name = "www"
-      type = "empty"
-      empty = {
-        size = 20 * 1024 # in megabyte
-      }
-    }
-  ]
-
-  configs = [
-    {
-      name = "database"
-      type = "secret"
-      secret = {
-        password = "wordpress"
-        database = "wordpress"
-        username = "wordpress"
-      }
-    }
-  ]
-
   containers = [
     {
-      name = "mysql"
-      image = {
-        name        = "mysql:8.2.0"
-        pull_policy = "IfNotPresent"
-      }
+      image = "mysql:8.0"
       envs = [
         {
-          name = "MYSQL_ROOT_PASSWORD"
-          type = "config"
-          config = {
-            name = "database"
-            key  = "password"
-          }
+          name        = "MYSQL_DATABASE"
+          value_refer = local.env_refer_database_name
         },
         {
-          name = "MYSQL_PASSWORD"
-          type = "config"
-          config = {
-            name = "database"
-            key  = "password"
-          }
+          name        = "MYSQL_USER"
+          value_refer = local.env_refer_database_username
         },
         {
-          name = "MYSQL_DATABASE"
-          type = "config"
-          config = {
-            name = "database"
-            key  = "database"
-          }
+          name        = "MYSQL_PASSWORD"
+          value_refer = local.env_refer_database_password
         },
         {
-          name = "MYSQL_USER"
-          type = "config"
-          config = {
-            name = "database"
-            key  = "username"
-          }
+          name        = "MYSQL_ROOT_PASSWORD"
+          value_refer = local.env_refer_database_password
         }
       ]
       mounts = [
         {
-          path = "/var/lib/mysql"
-          type = "storage"
-          storage = {
-            name = "data"
-          }
+          path         = "/var/lib/mysql"
+          volume_refer = local.volume_refer_database_data # persistent
+        }
+      ]
+      ports = [
+        {
+          internal = 3306
         }
       ]
     },
 
     {
-      name = "wordpress"
-      image = {
-        name        = "wordpress:6.3.2-apache"
-        pull_policy = "Always"
-      }
+      image = "wordpress:6.3.2-apache"
       envs = [
         {
-          name = "WORDPRESS_DB_HOST"
-          type = "text"
-          text = {
-            content = "wordpress-mysql"
-          }
+          name  = "WORDPRESS_DB_HOST"
+          value = "127.0.0.1:3306"
         },
         {
-          name = "WORDPRESS_DB_PASSWORD"
-          type = "config"
-          config = {
-            name = "database"
-            key  = "password"
-          }
+          name        = "WORDPRESS_DB_NAME"
+          value_refer = local.env_refer_database_name
         },
         {
-          name = "WORDPRESS_DB_USER"
-          type = "config"
-          config = {
-            name = "database"
-            key  = "username"
-          }
+          name        = "WORDPRESS_DB_USER"
+          value_refer = local.env_refer_database_username
+        },
+        {
+          name        = "WORDPRESS_DB_PASSWORD"
+          value_refer = local.env_refer_database_password
         }
       ]
       mounts = [
         {
-          path = "/var/www/html"
-          type = "storage"
-          storage = {
-            name = "www"
-          }
+          path = "/var/www/html" # ephemeral
         }
       ]
       ports = [
         {
           internal = 80
+          external = 80 # publish
+          protocol = "tcp"
         }
       ]
     }
