@@ -57,6 +57,7 @@ components:
                 Specify the domain name of the Kubernetes cluster.
               title: Domain Suffix
               type: string
+              default: cluster.local
               x-walrus-ui:
                 order: 2
             gpu_vendor:
