@@ -211,8 +211,17 @@ module "this" {
             }
           }
         },
+        { # refer
+          path = "/var/run/dir4"
+          volume_refer = {
+            schema = "k8s:persistentvolumeclaim"
+            params = {
+              name = kubernetes_persistent_volume_claim_v1.example.metadata[0].name
+            }
+          }
+        },
         { # invalid
-          path   = "/var/run/app/dir4"
+          path   = "/var/run/dir5"
           volume = "data"
           volume_refer = {
             schema = "k8s:configmap"
@@ -222,7 +231,7 @@ module "this" {
           }
         },
         { # invalid schema
-          path = "/var/run/app/dir5"
+          path = "/var/run/dir6"
           volume_refer = {
             schema = "configmap"
             params = {
@@ -337,6 +346,15 @@ EOF
         { # ephemeral
           path   = "/test"
           volume = "data" # shared between containers
+        },
+        { # refer
+          path = "/pvc"
+          volume_refer = {
+            schema = "k8s:persistentvolumeclaim"
+            params = {
+              name = kubernetes_persistent_volume_claim_v1.example.metadata[0].name
+            }
+          }
         }
       ]
       ports = [

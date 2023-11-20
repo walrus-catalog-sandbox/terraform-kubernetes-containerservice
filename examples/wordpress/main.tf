@@ -52,7 +52,7 @@ resource "kubernetes_secret_v1" "example" {
 
 locals {
   volume_refer_database_data = {
-    schema = "k8s:pesistentvolumeclaim"
+    schema = "k8s:persistentvolumeclaim"
     params = {
       name = kubernetes_persistent_volume_claim_v1.example.metadata[0].name
     }

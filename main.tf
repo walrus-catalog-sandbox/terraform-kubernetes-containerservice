@@ -104,7 +104,7 @@ locals {
   container_ephemeral_files_map = {
     for c in local.containers : c.name => [
       for f in c.files : merge(f, {
-        name = format("%s-eph-%s", c.name, md5(f.path))
+        name = format("eph-f-%s-%s", c.name, md5(f.path))
       })
       if f.content_refer == null
     ]
@@ -112,7 +112,7 @@ locals {
   container_refer_files_map = {
     for c in local.containers : c.name => [
       for f in c.files : merge(f, {
-        name = format("%s-%s", c.name, md5(jsonencode(f.content_refer)))
+        name = format("ref-f-%s-%s", c.name, md5(jsonencode(f.content_refer)))
       })
       if f.content_refer != null
     ]
@@ -121,7 +121,7 @@ locals {
   container_ephemeral_mounts_map = {
     for c in local.containers : c.name => [
       for m in c.mounts : merge(m, {
-        name = format("%s-eph-%s", c.name, try(m.volume == null || m.volume == "", true) ? replace(uuid(), "-", "") : md5(m.volume))
+        name = format("eph-m-%s", try(m.volume == null || m.volume == "", true) ? replace(uuid(), "-", "") : md5(m.volume))
       })
       if m.volume_refer == null
     ]
@@ -129,7 +129,7 @@ locals {
   container_refer_mounts_map = {
     for c in local.containers : c.name => [
       for m in c.mounts : merge(m, {
-        name = format("%s-%s", c.name, md5(jsonencode(m.volume_refer)))
+        name = format("ref-m-%s", md5(jsonencode(m.volume_refer)))
       })
       if m.volume_refer != null
     ]
@@ -285,6 +285,7 @@ resource "kubernetes_deployment_v1" "deployment" {
                   key  = config_map.value.content_refer.params.key
                   path = basename(config_map.value.path)
                 }
+                optional = try(lookup(config_map.value.volume_refer.params, "optional", null), null)
               }
             }
             dynamic "secret" {
@@ -296,6 +297,7 @@ resource "kubernetes_deployment_v1" "deployment" {
                   key  = secret.value.content_refer.params.key
                   path = basename(secret.value.path)
                 }
+                optional = try(lookup(secret.value.volume_refer.params, "optional", null), null)
               }
             }
           }
@@ -303,9 +305,13 @@ resource "kubernetes_deployment_v1" "deployment" {
 
         ### declare ephemeral mounts.
         dynamic "volume" {
-          for_each = flatten([
-            for _, ms in local.container_ephemeral_mounts_map : ms
-          ])
+          for_each = [
+            for _, v in {
+              for m in flatten([
+                for _, ms in local.container_ephemeral_mounts_map : ms
+              ]) : m.name => m...
+            } : v[0]
+          ]
           content {
             name = volume.value.name
             empty_dir {}
@@ -314,9 +320,13 @@ resource "kubernetes_deployment_v1" "deployment" {
 
         ### declare refer mounts.
         dynamic "volume" {
-          for_each = flatten([
-            for _, ms in local.container_refer_mounts_map : ms
-          ])
+          for_each = [
+            for _, v in {
+              for m in flatten([
+                for _, ms in local.container_refer_mounts_map : ms
+              ]) : m.name => m...
+            } : v[0]
+          ]
           content {
             name = volume.value.name
             dynamic "config_map" {
@@ -324,6 +334,7 @@ resource "kubernetes_deployment_v1" "deployment" {
               content {
                 default_mode = try(lookup(config_map.value.volume_refer.params, "mode", null), null)
                 name         = config_map.value.volume_refer.params.name
+                optional     = try(lookup(config_map.value.volume_refer.params, "optional", null), null)
               }
             }
             dynamic "secret" {
@@ -331,6 +342,7 @@ resource "kubernetes_deployment_v1" "deployment" {
               content {
                 default_mode = try(lookup(secret.value.volume_refer.params, "mode", null), null)
                 secret_name  = secret.value.volume_refer.params.name
+                optional     = try(lookup(secret.value.volume_refer.params, "optional", null), null)
               }
             }
             dynamic "persistent_volume_claim" {

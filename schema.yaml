@@ -53,11 +53,16 @@ components:
           default: {}
           properties:
             domain_suffix:
+              description: |
+                Specify the domain name of the Kubernetes cluster.
               title: Domain Suffix
               type: string
               x-walrus-ui:
                 order: 2
             gpu_vendor:
+              description: |
+                Specify the GPU vendor, default is `nvdia.com`.
+              default: "nvidia.com"
               title: Gpu Vendor
               type: string
               x-walrus-ui:
@@ -83,23 +88,33 @@ components:
             \ sysctls:\n  - name: string\n    value: string\n```\n"
           properties:
             fs_group:
+              description: |
+                Specify a special supplemental group that applies to all containers in a pod.
               title: Fs Group
               type: number
               x-walrus-ui:
                 order: 4
             replicas:
+              description: |
+                Specify the desired replicas of the deployment.
               default: 1
               title: Replicas
               type: number
               x-walrus-ui:
                 order: 2
             rolling:
+              description: |
+                Configure the rolling update strategy.
               properties:
                 max_surge:
+                  description: | 
+                    The maximum number of pods that can be scheduled above the desired number of pods. The value must be range between 0 to 1.
                   default: 0.25
                   title: Max Surge
                   type: number
                 max_unavailable:
+                  description: |
+                    The maximum number of pods that can be unavailable during the update. The value must be range between 0 to 1.
                   default: 0.25
                   title: Max Unavailable
                   type: number
@@ -109,12 +124,18 @@ components:
                 colSpan: 12
                 order: 3
             sysctls:
+              description: |
+                Specify the namespaced sysctls for the pod.
               items:
                 properties:
                   name:
+                    description: |
+                      Specify the name of the sysctl, select from https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/#listing-all-sysctl-parameters.
                     title: Name
                     type: string
                   value:
+                    description: |
+                      Specify the value of the sysctl.
                     title: Value
                     type: string
                 required:
@@ -129,7 +150,9 @@ components:
                 colSpan: 12
                 order: 5
             timeout:
-              default: 0
+              description: |
+                Specify the maximum time in seconds for a deployment to make progress before it is considered to be failed. 
+              default: 300
               title: Timeout
               type: number
               x-walrus-ui:
@@ -211,16 +234,24 @@ components:
           items:
             properties:
               checks:
+                description: |
+                  Configure the healthz checks.
                 items:
                   properties:
                     delay:
-                      title: Delay
+                      description: |
+                        Specify the delay time before starting the check.
+                      title: Delay(Sec)
                       type: number
                       x-walrus-ui:
                         order: 2
                     execute:
+                      description: |
+                        Configure the exeuction action.
                       properties:
                         command:
+                          description: |
+                            Specify the command to execute.
                           items:
                             type: string
                           title: Command
@@ -235,13 +266,23 @@ components:
                         colSpan: 12
                         showIf: type=execute
                     grpc:
+                      description: |
+                        Configure the grpc check.
                       properties:
                         port:
+                          description: |
+                            Specify the port of the grpc service.
                           title: Port
                           type: number
+                          x-walrus-ui:
+                            order: 1
                         service:
+                          description: |
+                            Specify the service name of the grpc service.
                           title: Service
                           type: string
+                          x-walrus-ui:
+                            order: 2
                       required:
                       - port
                       title: Grpc
@@ -250,8 +291,12 @@ components:
                         colSpan: 12
                         showIf: type=grpc
                     http:
+                      description: |
+                        Configure the http check.
                       properties:
                         headers:
+                          description: |
+                            Specify the headers of the http request. To pin the Hostname, please use `Host` header.
                           additionalProperties:
                             type: string
                           title: Headers
@@ -260,11 +305,16 @@ components:
                             colSpan: 12
                             order: 3
                         path:
+                          description: |
+                            Specify the path of the http request.
+                          default: "/"
                           title: Path
                           type: string
                           x-walrus-ui:
                             order: 2
                         port:
+                          description: |
+                            Specify the port of the http service.
                           title: Port
                           type: number
                           x-walrus-ui:
@@ -277,8 +327,12 @@ components:
                         colSpan: 12
                         showIf: type=http
                     https:
+                      description: |
+                        Configure the https check.
                       properties:
                         headers:
+                          description: |
+                            Specify the headers of the http request. To pin the Hostname, please use `Host` header.
                           additionalProperties:
                             type: string
                           title: Headers
@@ -287,11 +341,16 @@ components:
                             colSpan: 12
                             order: 3
                         path:
+                          description: |
+                            Specify the path of the http request.
+                          default: "/"
                           title: Path
                           type: string
                           x-walrus-ui:
                             order: 2
                         port:
+                          description: |
+                            Specify the port of the http service.
                           title: Port
                           type: number
                           x-walrus-ui:
@@ -304,18 +363,26 @@ components:
                         colSpan: 12
                         showIf: type=https
                     interval:
+                      description: |
+                        Specify how often to do the check.
                       title: Interval
                       type: number
                       x-walrus-ui:
                         order: 3
                     retries:
+                      description: |
+                        Specify the number of retries before marking this check as failed.
                       title: Retries
                       type: number
                       x-walrus-ui:
                         order: 5
                     tcp:
+                      description: |
+                        Configure the tcp check.
                       properties:
                         port:
+                          description: |
+                            Specify the port of the tcp service.
                           title: Port
                           type: number
                       required:
@@ -326,18 +393,30 @@ components:
                         colSpan: 12
                         showIf: type=tcp
                     teardown:
+                      description: |
+                        Specify whether to teardown the pod if the check failed.
                       title: Teardown
                       type: boolean
                       x-walrus-ui:
                         order: 6
                     timeout:
-                      title: Timeout
+                      description: |
+                        Specify the timeout of the check.
+                      title: Timeout(Sec)
                       type: number
                       x-walrus-ui:
                         order: 4
                     type:
+                      description: |
+                        Specify the type of the check.
                       title: Type
                       type: string
+                      enum:
+                      - execute
+                      - tcp
+                      - grpc
+                      - http
+                      - https
                       x-walrus-ui:
                         order: 1
                   required:
@@ -352,21 +431,31 @@ components:
                   order: 9
                   showIf: profile=run
               envs:
+                description: |
+                  Configure the environment variables.
                 items:
                   properties:
                     name:
+                      description: |
+                        Specify the name of the environment variable.
                       title: Name
                       type: string
                       x-walrus-ui:
                         order: 1
                     value:
+                      description: |
+                        Specify the value of the environment variable.
                       title: Value
                       type: string
                       x-walrus-ui:
                         order: 2
                     value_refer:
+                      description: |
+                        Specify the value refer of the environment variable.
                       properties:
                         params:
+                          description: |
+                            Specify the parameters of the value refer.
                           additionalProperties:
                             type: object
                             x-walrus-ui:
@@ -375,9 +464,16 @@ components:
                           type: object
                           x-walrus-ui:
                             colSpan: 12
+                            order: 2
                         schema:
+                          description: |
+                            Specify the schema of the value refer, only support k8s:secret
                           title: Schema
                           type: string
+                          enum:
+                          - "k8s:secret"
+                          x-walrus-ui:
+                            order: 1
                       required:
                       - params
                       - schema
@@ -398,8 +494,12 @@ components:
                   colSpan: 12
                   order: 5
               execute:
+                description: |
+                  Configure the execution.
                 properties:
                   args:
+                    description: |
+                      Specify the arguments of the command.
                     items:
                       type: string
                     title: Args
@@ -408,16 +508,22 @@ components:
                       colSpan: 12
                       order: 2
                   as_group:
+                    description: |
+                      Specify the group id to run the command.
                     title: As Group
                     type: number
                     x-walrus-ui:
                       order: 5
                   as_user:
+                    description: |
+                      Specify the user id to run the command.
                     title: As User
                     type: number
                     x-walrus-ui:
                       order: 6
                   command:
+                    description: |
+                      Specify the entrypoint of the container.
                     items:
                       type: string
                     title: Command
@@ -426,11 +532,15 @@ components:
                       colSpan: 12
                       order: 1
                   readonly_rootfs:
+                    description: |
+                      Specify whether to mount the rootfs as readonly.
                     title: Readonly Rootfs
                     type: boolean
                     x-walrus-ui:
                       order: 4
                   working_dir:
+                    description: |
+                      Specify the working directory of the command.
                     title: Working Dir
                     type: string
                     x-walrus-ui:
@@ -441,17 +551,25 @@ components:
                   colSpan: 12
                   order: 3
               files:
+                description: |
+                  Configure the files.
                 items:
                   properties:
                     content:
+                      description: |
+                        Specify the content of the (configuration) file.
                       title: Content
                       type: string
                       x-walrus-ui:
                         widget: TextArea
                         order: 3
                     content_refer:
+                      description: |
+                        Specify the content refer of the (configuration) file.
                       properties:
                         params:
+                          description: |
+                            Specify the parameters of the content refer.
                           additionalProperties:
                             type: object
                             x-walrus-ui:
@@ -461,8 +579,13 @@ components:
                           x-walrus-ui:
                             colSpan: 12
                         schema:
+                          description: |
+                            Specify the schema of the content refer, select from k8s:secret or k8s:configmap.
                           title: Schema
                           type: string
+                          enum:
+                          - "k8s:secret"
+                          - "k8s:configmap"
                       required:
                       - params
                       - schema
@@ -473,11 +596,16 @@ components:
                         hidden: true
                         order: 3
                     mode:
+                      description: |
+                        Specify the mode of the (configuration) file, default is 0644.
+                      default: "0644"
                       title: Mode
                       type: string
                       x-walrus-ui:
                         order: 2
                     path:
+                      description: |
+                        Specify the mounting path of the (configuration) file.
                       title: Path
                       type: string
                       x-walrus-ui:
@@ -498,31 +626,47 @@ components:
                 x-walrus-ui:
                   order: 1
               mounts:
+                description: |
+                  Configure the mounts.
                 items:
                   properties:
                     path:
+                      description: |
+                        Specify the mounting path of the volume.
                       title: Path
                       type: string
                       x-walrus-ui:
                         order: 1
                     readonly:
+                      description: |
+                        Specify whether to mount the volume as readonly.
                       title: Readonly
                       type: boolean
+                      default: false
                       x-walrus-ui:
                         order: 2
                     subpath:
+                      description: |
+                        Specify the path of the volume which the container should be mounted.
                       title: Subpath
                       type: string
                       x-walrus-ui:
                         order: 4
                     volume:
+                      description: |
+                        Specify the name of the ephemeral volume which shares between multiple containers. 
+                        If not specified, the ephemeral volume is exclusively mounted by this container.
                       title: Volume
                       type: string
                       x-walrus-ui:
                         order: 3
                     volume_refer:
+                      description: |
+                        Specify the volume refer of the volume.
                       properties:
                         params:
+                          description: |
+                            Specify the parameters of the volume refer.
                           additionalProperties:
                             type: object
                             x-walrus-ui:
@@ -532,8 +676,14 @@ components:
                           x-walrus-ui:
                             colSpan: 12
                         schema:
+                          description: |
+                            Specify the schema of the volume refer, select from k8s:secret, k8s:configmap or k8s:persistentvolumeclaim.
                           title: Schema
                           type: string
+                          enum:
+                          - "k8s:secret"
+                          - "k8s:configmap"
+                          - "k8s:persistentvolumeclaim"
                       required:
                       - params
                       - schema
@@ -554,21 +704,33 @@ components:
                   colSpan: 12
                   order: 7
               ports:
+                description: |
+                  Configure the ports.
                 items:
                   properties:
                     external:
+                      description: |
+                        Specify the external port of the service. If not specified, the port is not exposed.
                       title: External
                       type: number
                       x-walrus-ui:
                         order: 2
                     internal:
+                      description: |
+                        Specify the internal port of the service, which is used for inter-conntainer communication.
                       title: Internal
                       type: number
                       x-walrus-ui:
                         order: 1
                     protocol:
+                      description: |
+                        Specify the protocol of the port.
                       title: Protocol
                       type: string
+                      enum:
+                      - tcp
+                      - udp
+                      - sctp
                       x-walrus-ui:
                         order: 3
                   required:
@@ -583,23 +745,37 @@ components:
                   order: 8
                   showIf: profile=run
               profile:
+                description: | 
+                  Specify the profile of the container, select from init or run.
+                default: "run"
                 title: Profile
                 type: string
+                enum:
+                - run
+                - init
                 x-walrus-ui:
                   order: 2
               resources:
                 properties:
                   cpu:
+                    description: |
+                      Specify the cpu resources. Unit is core.
+                    default: 0.25
                     title: Cpu(Core)
                     type: number
                     x-walrus-ui:
                       order: 1
                   gpu:
+                    description: |
+                      Specify the gpu resources. Unit is core.
                     title: Gpu(Core)
                     type: number
                     x-walrus-ui:
                       order: 3
                   memory:
+                    description: |
+                      Specify the memory resources. Unit is megabyte.
+                    default: 256
                     title: Memory(MiB)
                     type: number
                     x-walrus-ui:

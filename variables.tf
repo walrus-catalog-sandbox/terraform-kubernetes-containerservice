@@ -71,7 +71,7 @@ deployment:
 ```
 EOF
   type = object({
-    timeout  = optional(number, 0)
+    timeout  = optional(number, 300)
     replicas = optional(number, 1)
     rolling = optional(object({
       max_surge       = optional(number, 0.25)
@@ -84,7 +84,7 @@ EOF
     })))
   })
   default = {
-    timeout  = 0
+    timeout  = 300
     replicas = 1
     rolling = {
       max_surge       = 0.25
