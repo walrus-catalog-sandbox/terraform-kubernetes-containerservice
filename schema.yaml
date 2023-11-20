@@ -153,7 +153,7 @@ components:
               description: |
                 Specify the maximum time in seconds for a deployment to make progress before it is considered to be failed. 
               default: 300
-              title: Timeout
+              title: Timeout(Sec)
               type: number
               x-walrus-ui:
                 order: 1
