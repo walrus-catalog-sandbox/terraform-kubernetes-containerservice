@@ -446,6 +446,7 @@ components:
                     value:
                       description: |
                         Specify the value of the environment variable.
+                        Value changes will be propagated and restart the container.
                       title: Value
                       type: string
                       x-walrus-ui:
@@ -453,6 +454,7 @@ components:
                     value_refer:
                       description: |
                         Specify the value refer of the environment variable.
+                        Value source changes will not be propagated.
                       properties:
                         params:
                           description: |
@@ -559,6 +561,7 @@ components:
                     content:
                       description: |
                         Specify the content of the (configuration) file.
+                        Value source changes will be propagated but will not restart the container.
                       title: Content
                       type: string
                       x-walrus-ui:
@@ -567,6 +570,7 @@ components:
                     content_refer:
                       description: |
                         Specify the content refer of the (configuration) file.
+                        Value source changes will not be propagated.
                       properties:
                         params:
                           description: |
