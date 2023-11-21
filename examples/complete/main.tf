@@ -372,10 +372,18 @@ output "context" {
   value = module.this.context
 }
 
-output "selector" {
-  value = module.this.selector
+output "refer" {
+  value = nonsensitive(module.this.refer)
 }
 
-output "endpoint_internal" {
-  value = module.this.endpoint_internal
+output "connection" {
+  value = module.this.connection
+}
+
+output "connection_without_port" {
+  value = module.this.connection_without_port
+}
+
+output "endpoints" {
+  value = module.this.endpoints
 }
