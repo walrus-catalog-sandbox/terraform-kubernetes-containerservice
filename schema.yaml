@@ -13,20 +13,6 @@ components:
           type: object
           description: |
             Receive contextual information. When Walrus deploys, Walrus will inject specific contextual information into this field.
-
-            Examples:
-            ```
-            context:
-              project:
-                name: string
-                id: string
-              environment:
-                name: string
-                id: string
-              resource:
-                name: string
-                id: string
-            ```
           default: {}
           additionalProperties:
             type: object
@@ -34,7 +20,7 @@ components:
               colSpan: 12
           x-walrus-ui:
             colSpan: 12
-            group: Basic
+            group: Advanced
             hidden: true
             order: 1
         infrastructure:
@@ -42,14 +28,6 @@ components:
           type: object
           description: |
             Specify the infrastructure information for deploying.
-
-            Examples:
-            ```
-            infrastructure:
-              namespace: string, optional
-              gpu_vendor: string, optional
-              domain_suffix: string, optional
-            ```
           default: {}
           properties:
             domain_suffix:
@@ -76,17 +54,12 @@ components:
                 order: 1
           x-walrus-ui:
             colSpan: 12
-            group: Basic
+            group: Advanced
             order: 2
         deployment:
           title: Deployment
           type: object
-          description: "Specify the deployment action, like scaling, scheduling, security
-            and so on.\n\nExamples:\n```\ndeployment:\n  timeout: number, optional\n
-            \ replicas: number, optional\n  rolling: \n    max_surge: number, optional
-            \         # in fraction, i.e. 0.25, 0.5, 1\n    max_unavailable: number,
-            optional    # in fraction, i.e. 0.25, 0.5, 1\n  fs_group: number, optional\n
-            \ sysctls:\n  - name: string\n    value: string\n```\n"
+          description: Specify the deployment action, like scaling, scheduling, security and so on.
           properties:
             fs_group:
               description: |
@@ -167,71 +140,6 @@ components:
           type: array
           description: |
             Specify the container items to deploy.
-
-            Examples:
-            ```
-            containers:
-            - profile: init/run
-              image: string
-              execute:
-                working_dir: string, optional
-                command: list(string), optional
-                args: list(string), optional
-                readonly_rootfs: bool, optional
-                as_user: number, optional
-                as_group: number, optional
-              resources:
-                cpu: number, optional               # in oneCPU, i.e. 0.25, 0.5, 1, 2, 4
-                memory: number, optional            # in megabyte
-                gpu: number, optional               # in oneGPU, i.e. 1, 2, 4
-              envs:
-              - name: string
-                value: string, optional             # accpet changed and restart
-                value_refer:                        # donot accpet changed
-                  schema: string
-                  params: map(any)
-              files:
-              - path: string
-                mode: string, optional
-                content: string, optional           # accpet changed but not restart
-                content_refer:                      # donot accpet changed
-                  schema: string
-                  params: map(any)
-              mounts:
-              - path: string
-                readonly: bool, optional
-                subpath: string, optional
-                volume: string, optional            # shared between containers if named, otherwise exclusively by this container
-                volume_refer:
-                  schema: string
-                  params: map(any)
-              ports:
-              - internal: number
-                external: number, optional
-                protocol: tcp/udp/sctp
-              checks:
-              - type: execute/tcp/grpc/http/https
-                delay: number, optional
-                interval: number, optional
-                timeout: number, optional
-                retries: number, optional
-                teardown: bool, optional
-                execute:
-                  command: list(string)
-                tcp:
-                  port: number
-                grpc:
-                  port: number
-                  service: string, optional
-                http:
-                  port: number
-                  headers: map(string), optional
-                  path: string, optional
-                https:
-                  port: number
-                  headers: map(string), optional
-                  path: string, optional
-            ```
           items:
             properties:
               checks:
@@ -443,6 +351,7 @@ components:
                       type: string
                       x-walrus-ui:
                         order: 1
+                        colSpan: 6
                     value:
                       description: |
                         Specify the value of the environment variable.
@@ -451,6 +360,7 @@ components:
                       type: string
                       x-walrus-ui:
                         order: 2
+                        colSpan: 6
                     value_refer:
                       description: |
                         Specify the value refer of the environment variable.
@@ -566,6 +476,7 @@ components:
                       type: string
                       x-walrus-ui:
                         widget: TextArea
+                        colSpan: 12
                         order: 3
                     content_refer:
                       description: |
@@ -608,6 +519,7 @@ components:
                       type: string
                       x-walrus-ui:
                         order: 2
+                        colSpan: 6
                     path:
                       description: |
                         Specify the mounting path of the (configuration) file.
@@ -615,6 +527,7 @@ components:
                       type: string
                       x-walrus-ui:
                         order: 1
+                        colSpan: 6
                   required:
                   - path
                   type: object
@@ -720,6 +633,7 @@ components:
                       type: number
                       x-walrus-ui:
                         order: 2
+                        colSpan: 4
                     internal:
                       description: |
                         Specify the internal port of the service, which is used for inter-conntainer communication.
@@ -727,6 +641,7 @@ components:
                       type: number
                       x-walrus-ui:
                         order: 1
+                        colSpan: 4
                     protocol:
                       description: |
                         Specify the protocol of the port.
@@ -738,6 +653,7 @@ components:
                       - sctp
                       x-walrus-ui:
                         order: 3
+                        colSpan: 4
                   required:
                   - internal
                   type: object
@@ -799,3 +715,8 @@ components:
             colSpan: 12
             group: Basic
             order: 4
+      x-walrus-ui:
+        groupOrder:
+          - Basic
+          - Advanced
+
