@@ -151,11 +151,11 @@ locals {
 
   init_containers = [
     for c in local.containers : c
-    if c.profile != "run"
+    if try(c.profile == "init", false)
   ]
   run_containers = [
     for c in local.containers : c
-    if c.profile == null || c.profile == "run"
+    if try(c.profile == "" || c.profile == "run", true)
   ]
 }
 

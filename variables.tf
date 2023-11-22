@@ -91,6 +91,14 @@ EOF
       max_unavailable = 0.25
     }
   }
+  validation {
+    condition     = try(0 < var.deployment.rolling.max_surge && var.deployment.rolling.max_surge <= 1, true)
+    error_message = "max_surge must be range from 0.1 to 1"
+  }
+  validation {
+    condition     = try(0 < var.deployment.rolling.max_unavailable && var.deployment.rolling.max_unavailable <= 1, true)
+    error_message = "max_surge must be range from 0.1 to 1"
+  }
 }
 
 variable "containers" {
@@ -239,4 +247,20 @@ EOF
       }))
     })))
   }))
+  validation {
+    condition     = length(var.containers) > 0
+    error_message = "containers must be at least one"
+  }
+  validation {
+    condition     = alltrue([for c in var.containers : c.profile == "" || contains(["init", "run"], c.profile)])
+    error_message = "profile must be init or run"
+  }
+  validation {
+    condition = alltrue(flatten([
+      for c in var.containers : [
+        for p in(c.ports != null ? c.ports : []) : (0 < p.internal && p.internal < 65536) && try(0 < p.external && p.external < 65536, true)
+      ]
+    ]))
+    error_message = "port must be range from 1 to 65535"
+  }
 }
