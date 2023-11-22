@@ -24,6 +24,8 @@ output "refer" {
     schema = "k8s:deployment"
     params = {
       selector  = local.labels
+      namespace = local.namespace
+      name      = kubernetes_deployment_v1.deployment.metadata[0].name
       hosts     = local.hosts
       ports     = length(local.external_ports) > 0 ? local.external_ports[*].external : []
       endpoints = local.endpoints
