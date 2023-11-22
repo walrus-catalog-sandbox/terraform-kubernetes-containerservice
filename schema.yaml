@@ -133,7 +133,7 @@ components:
                 order: 1
           x-walrus-ui:
             colSpan: 12
-            group: Basic
+            group: Advanced
             order: 3
         containers:
           title: Containers
@@ -404,8 +404,8 @@ components:
                 title: Envs
                 type: array
                 x-walrus-ui:
-                  colSpan: 12
-                  order: 5
+                  colSpan: 6
+                  order: 6
               execute:
                 description: |
                   Configure the execution.
@@ -461,8 +461,8 @@ components:
                 title: Execute
                 type: object
                 x-walrus-ui:
-                  colSpan: 12
-                  order: 3
+                  colSpan: 6
+                  order: 5
               files:
                 description: |
                   Configure the files.
@@ -536,8 +536,8 @@ components:
                 title: Files
                 type: array
                 x-walrus-ui:
-                  colSpan: 12
-                  order: 6
+                  colSpan: 6
+                  order: 7
               image:
                 title: Image
                 type: string
@@ -619,8 +619,8 @@ components:
                 title: Mounts
                 type: array
                 x-walrus-ui:
-                  colSpan: 12
-                  order: 7
+                  colSpan: 6
+                  order: 8
               ports:
                 description: |
                   Configure the ports.
@@ -662,8 +662,8 @@ components:
                 title: Ports
                 type: array
                 x-walrus-ui:
-                  colSpan: 12
-                  order: 8
+                  colSpan: 6
+                  order: 3
                   showIf: profile=run
               profile:
                 description: | 
@@ -704,7 +704,7 @@ components:
                 title: Resources
                 type: object
                 x-walrus-ui:
-                  colSpan: 12
+                  colSpan: 6
                   order: 4
             required:
             - image
