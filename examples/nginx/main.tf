@@ -94,8 +94,12 @@ output "connection" {
   value = module.this.connection
 }
 
-output "connection_without_port" {
-  value = module.this.connection_without_port
+output "address" {
+  value = module.this.address
+}
+
+output "ports" {
+  value = module.this.ports
 }
 
 output "endpoints" {

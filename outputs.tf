@@ -23,9 +23,10 @@ output "refer" {
   value = {
     schema = "k8s:deployment"
     params = {
-      selector = local.labels
-      hosts    = local.hosts
-      ports    = length(local.external_ports) > 0 ? local.external_ports[*].external : []
+      selector  = local.labels
+      hosts     = local.hosts
+      ports     = length(local.external_ports) > 0 ? local.external_ports[*].external : []
+      endpoints = local.endpoints
     }
   }
 }
@@ -39,9 +40,14 @@ output "connection" {
   value       = join(",", local.endpoints)
 }
 
-output "connection_without_port" {
-  description = "The connection without port, a string combined host, might be a comma separated string or a single string."
+output "address" {
+  description = "The address, a string only has host, might be a comma separated string or a single string."
   value       = join(",", local.hosts)
+}
+
+output "ports" {
+  description = "The port list of the service."
+  value       = length(local.external_ports) > 0 ? local.external_ports[*].external : []
 }
 
 ## UI display
