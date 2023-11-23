@@ -259,7 +259,7 @@ module "this" {
   <h1>Hi</h1>
   </br>
   <h1>This is first running nginx.</h1>
-</html
+</html>
 EOF
         }
       ]
@@ -324,7 +324,7 @@ EOF
   <h1>Hi</h1>
   </br>
   <h1>This is second running nginx.</h1>
-</html
+</html>
 EOF
         },
         {

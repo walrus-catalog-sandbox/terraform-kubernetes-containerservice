@@ -51,7 +51,7 @@ module "this" {
   <h1>Hi</h1>
   </br>
   <h1>Welcome to Kubernetes Container Service.</h1>
-</html
+</html>
 EOF
         }
       ]
