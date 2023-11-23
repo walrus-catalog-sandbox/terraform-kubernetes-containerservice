@@ -65,6 +65,12 @@ components:
           title: Deployment
           type: object
           description: Specify the deployment action, like scaling, scheduling, security and so on.
+          default: 
+            replicas: 1
+            timeout: 300
+            rolling: 
+              max_surge: 0.25
+              max_unavailable: 0.25
           nullable: true
           properties:
             fs_group:
