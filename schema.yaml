@@ -154,7 +154,7 @@ components:
               nullable: true
               title: Timeout(Sec)
               type: number
-              minimum: 30
+              minimum: 0
               x-walrus-ui:
                 order: 2
           x-walrus-ui:

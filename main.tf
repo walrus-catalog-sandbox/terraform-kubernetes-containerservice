@@ -227,8 +227,9 @@ resource "kubernetes_deployment_v1" "deployment" {
 
   spec {
     ### scaling.
-    min_ready_seconds = var.deployment.timeout
-    replicas          = var.deployment.replicas
+    min_ready_seconds         = 0
+    progress_deadline_seconds = try(var.deployment.timeout != null && var.deployment.timeout > 0, false) ? var.deployment.timeout : null
+    replicas                  = var.deployment.replicas
     strategy {
       type = "RollingUpdate"
       rolling_update {
