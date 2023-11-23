@@ -303,7 +303,8 @@ EOF
           tcp = {
             port = 80
           }
-        }
+        },
+        null
       ]
     },
     {
@@ -312,7 +313,8 @@ EOF
         {
           name  = "NGINX_PORT"
           value = "8080"
-        }
+        },
+        null
       ]
       files = [
         {
@@ -340,7 +342,8 @@ server {
   }
 }
 EOF
-        }
+        },
+        null
       ]
       mounts = [
         { # ephemeral
@@ -355,16 +358,19 @@ EOF
               name = kubernetes_persistent_volume_claim_v1.example.metadata[0].name
             }
           }
-        }
+        },
+        null
       ]
       ports = [
         { # override the previous container's specification
           internal = 8080
           external = 80 # expose
           protocol = "TCP"
-        }
+        },
+        null
       ]
-    }
+    },
+    null
   ]
 }
 

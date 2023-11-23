@@ -252,13 +252,13 @@ EOF
     error_message = "containers must be at least one"
   }
   validation {
-    condition     = alltrue([for c in var.containers : c.profile == "" || contains(["init", "run"], c.profile)])
+    condition     = alltrue([for c in var.containers : try(c.profile == "" || contains(["init", "run"], c.profile), true)])
     error_message = "profile must be init or run"
   }
   validation {
     condition = alltrue(flatten([
       for c in var.containers : [
-        for p in(c.ports != null ? c.ports : []) : (0 < p.internal && p.internal < 65536) && try(0 < p.external && p.external < 65536, true)
+        for p in try(c.ports != null ? c.ports : [], []) : try(0 < p.internal && p.internal < 65536, true) && try(0 < p.external && p.external < 65536, true)
       ]
     ]))
     error_message = "port must be range from 1 to 65535"
