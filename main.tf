@@ -830,7 +830,7 @@ resource "kubernetes_service_v1" "service" {
 
   spec {
     selector         = local.labels
-    type             = "ClusterIP"
+    type             = length(local.external_ports) > 0 ? try(coalesce(var.infrastructure.service_type, "NodePort"), "NodePort") : "ClusterIP"
     session_affinity = "ClientIP"
     cluster_ip       = length(local.external_ports) > 0 ? null : "None"
 

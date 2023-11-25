@@ -38,12 +38,14 @@ infrastructure:
   namespace: string, optional
   gpu_vendor: string, optional
   domain_suffix: string, optional
+  service_type: string, optional
 ```
 EOF
   type = object({
     namespace     = optional(string)
     gpu_vendor    = optional(string, "nvidia.com")
     domain_suffix = optional(string, "cluster.local")
+    service_type  = optional(string, "NodePort")
   })
   default = {}
 }
