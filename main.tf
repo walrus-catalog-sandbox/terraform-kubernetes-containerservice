@@ -154,13 +154,6 @@ locals {
     ]
     if c != null
   }
-  external_ports = flatten([
-    for c in local.containers : [
-      for p in c.ports : p
-      if try(p.external != null, false)
-    ]
-    if c != null
-  ])
 
   init_containers = [
     for c in local.containers : c
@@ -182,11 +175,29 @@ locals {
   ephemeral_files = flatten([
     for _, fs in local.container_ephemeral_files_map : fs
   ])
+  refer_files = flatten([
+    for _, fs in local.container_refer_files_map : fs
+  ])
+
+  ephemeral_mounts = [
+    for _, v in {
+      for m in flatten([
+        for _, ms in local.container_ephemeral_mounts_map : ms
+      ]) : m.name => m...
+    } : v[0]
+  ]
+  refer_mounts = [
+    for _, v in {
+      for m in flatten([
+        for _, ms in local.container_refer_mounts_map : ms
+      ]) : m.name => m...
+    } : v[0]
+  ]
 }
 
 resource "kubernetes_config_map_v1" "ephemeral_files" {
   for_each = {
-    for f in local.ephemeral_files : f.name => f
+    for f in try(nonsensitive(local.ephemeral_files), local.ephemeral_files) : f.name => f
   }
 
   metadata {
@@ -229,6 +240,7 @@ resource "kubernetes_deployment_v1" "deployment" {
   spec {
     ### scaling.
     min_ready_seconds         = 0
+    revision_history_limit    = 3
     progress_deadline_seconds = try(var.deployment.timeout != null && var.deployment.timeout > 0, false) ? var.deployment.timeout : null
     replicas                  = var.deployment.replicas
     strategy {
@@ -257,7 +269,10 @@ resource "kubernetes_deployment_v1" "deployment" {
           for_each = try(length(var.deployment.sysctls), 0) > 0 || try(var.deployment.fs_group != null, false) ? [{}] : []
           content {
             dynamic "sysctl" {
-              for_each = try(var.deployment.sysctls != null, false) ? var.deployment.sysctls : []
+              for_each = try(var.deployment.sysctls != null, false) ? try(
+                nonsensitive(var.deployment.sysctls),
+                var.deployment.sysctls
+              ) : []
               content {
                 name  = sysctl.value.name
                 value = sysctl.value.value
@@ -269,7 +284,7 @@ resource "kubernetes_deployment_v1" "deployment" {
 
         ### declare ephemeral files.
         dynamic "volume" {
-          for_each = local.ephemeral_files
+          for_each = try(nonsensitive(local.ephemeral_files), local.ephemeral_files)
           content {
             name = volume.value.name
             config_map {
@@ -285,9 +300,7 @@ resource "kubernetes_deployment_v1" "deployment" {
 
         ### declare refer files.
         dynamic "volume" {
-          for_each = flatten([
-            for _, fs in local.container_refer_files_map : fs
-          ])
+          for_each = try(nonsensitive(local.refer_files), local.refer_files)
           content {
             name = volume.value.name
             dynamic "config_map" {
@@ -319,13 +332,7 @@ resource "kubernetes_deployment_v1" "deployment" {
 
         ### declare ephemeral mounts.
         dynamic "volume" {
-          for_each = [
-            for _, v in {
-              for m in flatten([
-                for _, ms in local.container_ephemeral_mounts_map : ms
-              ]) : m.name => m...
-            } : v[0]
-          ]
+          for_each = try(nonsensitive(local.ephemeral_mounts), local.ephemeral_mounts)
           content {
             name = volume.value.name
             empty_dir {}
@@ -334,13 +341,7 @@ resource "kubernetes_deployment_v1" "deployment" {
 
         ### declare refer mounts.
         dynamic "volume" {
-          for_each = [
-            for _, v in {
-              for m in flatten([
-                for _, ms in local.container_refer_mounts_map : ms
-              ]) : m.name => m...
-            } : v[0]
-          ]
+          for_each = try(nonsensitive(local.refer_mounts), local.refer_mounts)
           content {
             name = volume.value.name
             dynamic "config_map" {
@@ -371,7 +372,7 @@ resource "kubernetes_deployment_v1" "deployment" {
 
         ### configure init containers.
         dynamic "init_container" {
-          for_each = local.init_containers
+          for_each = try(nonsensitive(local.init_containers), local.init_containers)
           content {
             #### configure basic.
             name              = init_container.value.name
@@ -388,7 +389,10 @@ resource "kubernetes_deployment_v1" "deployment" {
 
             #### configure resources.
             dynamic "resources" {
-              for_each = init_container.value.resources != null ? [init_container.value.resources] : []
+              for_each = init_container.value.resources != null ? try(
+                [nonsensitive(init_container.value.resources)],
+                [init_container.value.resources]
+              ) : []
               content {
                 requests = {
                   for k, v in resources.value : "%{if k == "gpu"}${local.gpu_vendor}/%{endif}${k}" => "%{if k == "memory"}${v}Mi%{else}${v}%{endif}"
@@ -427,7 +431,10 @@ resource "kubernetes_deployment_v1" "deployment" {
 
             #### configure ephemeral envs.
             dynamic "env" {
-              for_each = local.container_ephemeral_envs_map[init_container.value.name] != null ? local.container_ephemeral_envs_map[init_container.value.name] : []
+              for_each = local.container_ephemeral_envs_map[init_container.value.name] != null ? try(
+                nonsensitive(local.container_ephemeral_envs_map[init_container.value.name]),
+                local.container_ephemeral_envs_map[init_container.value.name]
+              ) : []
               content {
                 name  = env.value.name
                 value = env.value.value
@@ -436,7 +443,10 @@ resource "kubernetes_deployment_v1" "deployment" {
 
             #### configure refer envs.
             dynamic "env" {
-              for_each = local.container_refer_envs_map[init_container.value.name] != null ? local.container_refer_envs_map[init_container.value.name] : []
+              for_each = local.container_refer_envs_map[init_container.value.name] != null ? try(
+                nonsensitive(local.container_refer_envs_map[init_container.value.name]),
+                local.container_refer_envs_map[init_container.value.name]
+              ) : []
               content {
                 name = env.value.name
                 value_from {
@@ -450,7 +460,10 @@ resource "kubernetes_deployment_v1" "deployment" {
 
             #### configure ephemeral files.
             dynamic "volume_mount" {
-              for_each = local.container_ephemeral_files_map[init_container.value.name] != null ? local.container_ephemeral_files_map[init_container.value.name] : []
+              for_each = local.container_ephemeral_files_map[init_container.value.name] != null ? try(
+                nonsensitive(local.container_ephemeral_files_map[init_container.value.name]),
+                local.container_ephemeral_files_map[init_container.value.name]
+              ) : []
               content {
                 name       = volume_mount.value.name
                 mount_path = dirname(volume_mount.value.path)
@@ -459,7 +472,10 @@ resource "kubernetes_deployment_v1" "deployment" {
 
             #### configure refer files.
             dynamic "volume_mount" {
-              for_each = local.container_refer_files_map[init_container.value.name] != null ? local.container_refer_files_map[init_container.value.name] : []
+              for_each = local.container_refer_files_map[init_container.value.name] != null ? try(
+                nonsensitive(local.container_refer_files_map[init_container.value.name]),
+                local.container_refer_files_map[init_container.value.name]
+              ) : []
               content {
                 name       = volume_mount.value.name
                 mount_path = volume_mount.value.path
@@ -469,7 +485,10 @@ resource "kubernetes_deployment_v1" "deployment" {
 
             #### configure ephemeral mounts.
             dynamic "volume_mount" {
-              for_each = local.container_ephemeral_mounts_map[init_container.value.name] != null ? local.container_ephemeral_mounts_map[init_container.value.name] : []
+              for_each = local.container_ephemeral_mounts_map[init_container.value.name] != null ? try(
+                nonsensitive(local.container_ephemeral_mounts_map[init_container.value.name]),
+                local.container_ephemeral_mounts_map[init_container.value.name]
+              ) : []
               content {
                 name       = volume_mount.value.name
                 mount_path = volume_mount.value.path
@@ -480,7 +499,10 @@ resource "kubernetes_deployment_v1" "deployment" {
 
             #### configure refer mounts.
             dynamic "volume_mount" {
-              for_each = local.container_refer_mounts_map[init_container.value.name] != null ? local.container_refer_mounts_map[init_container.value.name] : []
+              for_each = local.container_refer_mounts_map[init_container.value.name] != null ? try(
+                nonsensitive(local.container_refer_mounts_map[init_container.value.name]),
+                local.container_refer_mounts_map[init_container.value.name]
+              ) : []
               content {
                 name       = volume_mount.value.name
                 mount_path = volume_mount.value.path
@@ -493,7 +515,7 @@ resource "kubernetes_deployment_v1" "deployment" {
 
         ### configure run containers.
         dynamic "container" {
-          for_each = local.run_containers
+          for_each = try(nonsensitive(local.run_containers), local.run_containers)
           content {
             #### configure basic.
             name              = container.value.name
@@ -510,7 +532,10 @@ resource "kubernetes_deployment_v1" "deployment" {
 
             #### configure resources.
             dynamic "resources" {
-              for_each = container.value.resources != null ? [container.value.resources] : []
+              for_each = container.value.resources != null ? try(
+                [nonsensitive(container.value.resources)],
+                [container.value.resources]
+              ) : []
               content {
                 requests = {
                   for k, v in resources.value : "%{if k == "gpu"}${local.gpu_vendor}/%{endif}${k}" => "%{if k == "memory"}${v}Mi%{else}${v}%{endif}"
@@ -549,7 +574,10 @@ resource "kubernetes_deployment_v1" "deployment" {
 
             #### configure ephemeral envs.
             dynamic "env" {
-              for_each = local.container_ephemeral_envs_map[container.value.name] != null ? local.container_ephemeral_envs_map[container.value.name] : []
+              for_each = local.container_ephemeral_envs_map[container.value.name] != null ? try(
+                nonsensitive(local.container_ephemeral_envs_map[container.value.name]),
+                local.container_ephemeral_envs_map[container.value.name]
+              ) : []
               content {
                 name  = env.value.name
                 value = env.value.value
@@ -558,7 +586,10 @@ resource "kubernetes_deployment_v1" "deployment" {
 
             #### configure refer envs.
             dynamic "env" {
-              for_each = local.container_refer_envs_map[container.value.name] != null ? local.container_refer_envs_map[container.value.name] : []
+              for_each = local.container_refer_envs_map[container.value.name] != null ? try(
+                nonsensitive(local.container_refer_envs_map[container.value.name]),
+                local.container_refer_envs_map[container.value.name]
+              ) : []
               content {
                 name = env.value.name
                 value_from {
@@ -572,7 +603,10 @@ resource "kubernetes_deployment_v1" "deployment" {
 
             #### configure ephemeral files.
             dynamic "volume_mount" {
-              for_each = local.container_ephemeral_files_map[container.value.name] != null ? local.container_ephemeral_files_map[container.value.name] : []
+              for_each = local.container_ephemeral_files_map[container.value.name] != null ? try(
+                nonsensitive(local.container_ephemeral_files_map[container.value.name]),
+                local.container_ephemeral_files_map[container.value.name]
+              ) : []
               content {
                 name       = volume_mount.value.name
                 mount_path = dirname(volume_mount.value.path)
@@ -581,7 +615,10 @@ resource "kubernetes_deployment_v1" "deployment" {
 
             #### configure refer files.
             dynamic "volume_mount" {
-              for_each = local.container_refer_files_map[container.value.name] != null ? local.container_refer_files_map[container.value.name] : []
+              for_each = local.container_refer_files_map[container.value.name] != null ? try(
+                nonsensitive(local.container_refer_files_map[container.value.name]),
+                local.container_refer_files_map[container.value.name]
+              ) : []
               content {
                 name       = volume_mount.value.name
                 mount_path = volume_mount.value.path
@@ -591,7 +628,10 @@ resource "kubernetes_deployment_v1" "deployment" {
 
             #### configure ephemeral mounts.
             dynamic "volume_mount" {
-              for_each = local.container_ephemeral_mounts_map[container.value.name] != null ? local.container_ephemeral_mounts_map[container.value.name] : []
+              for_each = local.container_ephemeral_mounts_map[container.value.name] != null ? try(
+                nonsensitive(local.container_ephemeral_mounts_map[container.value.name]),
+                local.container_ephemeral_mounts_map[container.value.name]
+              ) : []
               content {
                 name       = volume_mount.value.name
                 mount_path = volume_mount.value.path
@@ -602,7 +642,10 @@ resource "kubernetes_deployment_v1" "deployment" {
 
             #### configure refer mounts.
             dynamic "volume_mount" {
-              for_each = local.container_refer_mounts_map[container.value.name] != null ? local.container_refer_mounts_map[container.value.name] : []
+              for_each = local.container_refer_mounts_map[container.value.name] != null ? try(
+                nonsensitive(local.container_refer_mounts_map[container.value.name]),
+                local.container_refer_mounts_map[container.value.name]
+              ) : []
               content {
                 name       = volume_mount.value.name
                 mount_path = volume_mount.value.path
@@ -613,7 +656,10 @@ resource "kubernetes_deployment_v1" "deployment" {
 
             #### configure internal ports.
             dynamic "port" {
-              for_each = local.container_internal_ports_map[container.value.name] != null ? local.container_internal_ports_map[container.value.name] : []
+              for_each = local.container_internal_ports_map[container.value.name] != null ? try(
+                nonsensitive(local.container_internal_ports_map[container.value.name]),
+                local.container_internal_ports_map[container.value.name]
+              ) : []
               content {
                 name           = port.value.name
                 protocol       = port.value.protocol
@@ -818,6 +864,16 @@ resource "kubernetes_deployment_v1" "deployment" {
 # Exposing
 #
 
+locals {
+  external_ports = flatten([
+    for c in local.containers : [
+      for p in c.ports : p
+      if try(p.external != null, false)
+    ]
+    if c != null
+  ])
+}
+
 resource "kubernetes_service_v1" "service" {
   wait_for_load_balancer = false
 
@@ -831,11 +887,11 @@ resource "kubernetes_service_v1" "service" {
   spec {
     selector         = local.labels
     type             = length(local.external_ports) > 0 ? try(coalesce(var.infrastructure.service_type, "NodePort"), "NodePort") : "ClusterIP"
-    session_affinity = "ClientIP"
+    session_affinity = length(local.external_ports) > 0 ? "ClientIP" : "None"
     cluster_ip       = length(local.external_ports) > 0 ? null : "None"
 
     dynamic "port" {
-      for_each = local.external_ports
+      for_each = try(nonsensitive(local.external_ports), local.external_ports)
       content {
         target_port = port.value.internal
         port        = port.value.external
