@@ -278,11 +278,15 @@ EOF
         }
       ]
       checks = [
-        { # startup probe
-          type  = "http"
-          delay = 10
+        { # startup & liveness probe
+          type     = "http"
+          delay    = 10
+          teardown = true
           http = {
             port = 80
+            headers = {
+              "X-Agent" = "localhost"
+            }
           }
         },
         { # readiness probe

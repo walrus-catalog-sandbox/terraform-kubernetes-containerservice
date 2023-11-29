@@ -50,6 +50,7 @@ module "this" {
         {
           type     = "http"
           delay    = 10
+          teardown = true
           retries  = 3
           interval = 30
           timeout  = 2
