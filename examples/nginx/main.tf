@@ -64,14 +64,8 @@ EOF
       ]
       checks = [
         {
-          type  = "http"
-          delay = 10
-          http = {
-            port = 80
-          }
-        },
-        {
           type     = "http"
+          delay    = 10
           teardown = true
           http = {
             port = 80
