@@ -201,7 +201,7 @@ components:
                         order: 6
                     execute:
                       description: |
-                        Configure the exeuction action.
+                        Configure the execution action.
                       nullable: true
                       properties:
                         command:
@@ -644,7 +644,7 @@ components:
                         colSpan: 4
                     internal:
                       description: |
-                        Specify the internal port of the service, which is used for inter-conntainer communication.
+                        Specify the internal port of the service, which is used for inter-container communication.
                       title: Internal
                       type: number
                       minimum: 1
