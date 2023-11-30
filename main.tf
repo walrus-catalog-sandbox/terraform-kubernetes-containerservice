@@ -898,6 +898,7 @@ resource "kubernetes_service_v1" "service" {
     dynamic "port" {
       for_each = try(nonsensitive(local.external_ports), local.external_ports)
       content {
+        name        = lower(format("%s-%d", port.value.protocol, port.value.external))
         target_port = port.value.internal
         port        = port.value.external
         protocol    = port.value.protocol
