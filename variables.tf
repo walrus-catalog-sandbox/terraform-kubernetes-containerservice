@@ -147,9 +147,9 @@ containers:
   ports:
   - internal: number
     external: number, optional
-    protocol: tcp/udp/sctp
+    protocol: tcp/udp
   checks:
-  - type: execute/tcp/grpc/http/https
+  - type: execute/tcp/http/https
     delay: number, optional
     interval: number, optional
     timeout: number, optional
@@ -159,9 +159,6 @@ containers:
       command: list(string)
     tcp:
       port: number
-    grpc:
-      port: number
-      service: string, optional
     http:
       port: number
       headers: map(string), optional
@@ -186,7 +183,7 @@ EOF
     resources = optional(object({
       cpu    = optional(number, 0.25)
       memory = optional(number, 256)
-      gpu    = optional(number)
+      gpu    = optional(number, 0)
     }))
     envs = optional(list(object({
       name  = string
@@ -232,10 +229,6 @@ EOF
       }))
       tcp = optional(object({
         port = number
-      }))
-      grpc = optional(object({
-        port    = number
-        service = optional(string)
       }))
       http = optional(object({
         port    = number
