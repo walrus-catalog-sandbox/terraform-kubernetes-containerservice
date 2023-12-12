@@ -33,7 +33,7 @@ locals {
   wellknown_env_schemas    = ["k8s:secret"]
   wellknown_file_schemas   = ["k8s:secret", "k8s:configmap"]
   wellknown_mount_schemas  = ["k8s:secret", "k8s:configmap", "k8s:persistentvolumeclaim"]
-  wellknown_port_protocols = ["TCP", "UDP", "SCTP"]
+  wellknown_port_protocols = ["TCP", "UDP"]
 
   internal_port_container_index_map = {
     for ip, cis in merge(flatten([
@@ -690,13 +690,6 @@ resource "kubernetes_deployment_v1" "deployment" {
                     port = tcp_socket.value.port
                   }
                 }
-                dynamic "grpc" {
-                  for_each = startup_probe.value.type == "grpc" ? [startup_probe.value.grpc] : []
-                  content {
-                    port    = grpc.value.port
-                    service = grpc.value.service
-                  }
-                }
                 dynamic "http_get" {
                   for_each = startup_probe.value.type == "http" ? [startup_probe.value.http] : []
                   content {
@@ -752,13 +745,6 @@ resource "kubernetes_deployment_v1" "deployment" {
                     port = tcp_socket.value.port
                   }
                 }
-                dynamic "grpc" {
-                  for_each = readiness_probe.value.type == "grpc" ? [readiness_probe.value.grpc] : []
-                  content {
-                    port    = grpc.value.port
-                    service = grpc.value.service
-                  }
-                }
                 dynamic "http_get" {
                   for_each = readiness_probe.value.type == "http" ? [readiness_probe.value.http] : []
                   content {
@@ -811,13 +797,6 @@ resource "kubernetes_deployment_v1" "deployment" {
                   for_each = liveness_probe.value.type == "tcp" ? [liveness_probe.value.tcp] : []
                   content {
                     port = tcp_socket.value.port
-                  }
-                }
-                dynamic "grpc" {
-                  for_each = liveness_probe.value.type == "grpc" ? [liveness_probe.value.grpc] : []
-                  content {
-                    port    = grpc.value.port
-                    service = grpc.value.service
                   }
                 }
                 dynamic "http_get" {
