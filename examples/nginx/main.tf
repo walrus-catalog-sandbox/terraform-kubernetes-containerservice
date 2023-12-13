@@ -43,6 +43,12 @@ module "this" {
         cpu    = 0.1
         memory = 100 # Mi
       }
+      envs = [
+        {
+          name  = "ENV_TEST"
+          value = sensitive("dev")
+        }
+      ]
       files = [
         {
           path    = "/usr/share/nginx/html/index.html"
@@ -53,6 +59,10 @@ module "this" {
   <h1>Welcome to Kubernetes Container Service.</h1>
 </html>
 EOF
+        },
+        {
+          path    = "/usr/share/nginx/html/test.html"
+          content = sensitive("ok")
         }
       ]
       ports = [
