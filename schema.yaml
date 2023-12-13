@@ -797,7 +797,6 @@ components:
                   order: 4
             required:
             - image
-            - profile
             type: object
             x-walrus-ui:
               colSpan: 12
