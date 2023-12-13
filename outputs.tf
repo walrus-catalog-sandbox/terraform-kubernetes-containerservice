@@ -4,7 +4,7 @@ locals {
   ]
 
   endpoints = length(local.external_ports) > 0 ? flatten([
-    for c in local.hosts : formatlist("%s:%d", c, local.external_ports[*].external)
+    for c in local.hosts : formatlist("%s:%d", c, try(nonsensitive(local.external_ports[*].external), local.external_ports[*].external))
   ]) : []
 }
 
@@ -27,7 +27,7 @@ output "refer" {
       namespace = local.namespace
       name      = kubernetes_deployment_v1.deployment.metadata[0].name
       hosts     = local.hosts
-      ports     = length(local.external_ports) > 0 ? local.external_ports[*].external : []
+      ports     = length(local.external_ports) > 0 ? try(nonsensitive(local.external_ports[*].external), local.external_ports[*].external) : []
       endpoints = local.endpoints
     }
   }
@@ -49,7 +49,7 @@ output "address" {
 
 output "ports" {
   description = "The port list of the service."
-  value       = length(local.external_ports) > 0 ? local.external_ports[*].external : []
+  value       = length(local.external_ports) > 0 ? try(nonsensitive(local.external_ports[*].external), local.external_ports[*].external) : []
 }
 
 ## UI display
