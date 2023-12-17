@@ -301,14 +301,14 @@ EOF
             port = 80
           }
         },
-        { # liveness probe
+        { # invalid type
           type     = "exec"
           teardown = true
           exec = {
             command = ["curl", "http://localhost"]
           }
         },
-        { # invalid
+        { # invalid config
           type = "exec"
           tcp = {
             port = 80

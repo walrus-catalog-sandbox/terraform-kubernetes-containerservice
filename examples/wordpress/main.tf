@@ -120,6 +120,19 @@ module "this" {
           internal = 3306
         }
       ]
+      checks = [
+        {
+          type     = "tcp"
+          delay    = 10
+          teardown = true
+          retries  = 3
+          interval = 30
+          timeout  = 2
+          tcp = {
+            port = 3306
+          }
+        }
+      ]
     },
 
     {
@@ -152,6 +165,20 @@ module "this" {
           internal = 80
           external = 80 # publish
           protocol = "tcp"
+        }
+      ]
+      checks = [
+        {
+          type     = "http"
+          delay    = 10
+          teardown = true
+          retries  = 3
+          interval = 30
+          timeout  = 2
+          http = {
+            port = 80
+            path = "/"
+          }
         }
       ]
     }

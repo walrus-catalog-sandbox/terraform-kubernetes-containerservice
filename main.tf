@@ -229,6 +229,29 @@ locals {
     WALRUS_ENVIRONMENT_NAME = "walrus.seal.io/environment-name"
     WALRUS_RESOURCE_NAME    = "walrus.seal.io/resource-name"
   }
+
+  run_containers_mapping_checks_map = {
+    for n, cks in {
+      for c in local.run_containers : c.name => {
+        startup = [
+          for ck in c.checks : ck
+          if try(ck.delay > 0 && ck.teardown, false)
+        ]
+        readiness = [
+          for ck in c.checks : ck
+          if try(!ck.teardown, false)
+        ]
+        liveness = [
+          for ck in c.checks : ck
+          if try(ck.teardown, false)
+        ]
+      }
+      } : n => merge(cks, {
+        startup   = try(slice(cks.startup, 0, 1), [])
+        readiness = try(slice(cks.readiness, 0, 1), [])
+        liveness  = try(slice(cks.liveness, 0, 1), [])
+    })
+  }
 }
 
 resource "kubernetes_deployment_v1" "deployment" {
@@ -676,14 +699,8 @@ resource "kubernetes_deployment_v1" "deployment" {
             #### configure checks.
             dynamic "startup_probe" {
               for_each = try(
-                nonsensitive([
-                  for ck in container.value.checks : ck
-                  if try(ck.delay > 0 && ck.teardown, false)
-                ]),
-                [
-                  for ck in container.value.checks : ck
-                  if try(ck.delay > 0 && ck.teardown, false)
-                ]
+                nonsensitive(local.run_containers_mapping_checks_map[container.value.name].startup),
+                local.run_containers_mapping_checks_map[container.value.name].startup
               )
               content {
                 initial_delay_seconds = startup_probe.value.delay
@@ -745,14 +762,8 @@ resource "kubernetes_deployment_v1" "deployment" {
 
             dynamic "readiness_probe" {
               for_each = try(
-                nonsensitive([
-                  for ck in container.value.checks : ck
-                  if try(!ck.teardown, false)
-                ]),
-                [
-                  for ck in container.value.checks : ck
-                  if try(!ck.teardown, false)
-                ]
+                nonsensitive(local.run_containers_mapping_checks_map[container.value.name].readiness),
+                local.run_containers_mapping_checks_map[container.value.name].readiness
               )
               content {
                 initial_delay_seconds = readiness_probe.value.delay
@@ -814,14 +825,8 @@ resource "kubernetes_deployment_v1" "deployment" {
 
             dynamic "liveness_probe" {
               for_each = try(
-                nonsensitive([
-                  for ck in container.value.checks : ck
-                  if try(ck.teardown, false)
-                ]),
-                [
-                  for ck in container.value.checks : ck
-                  if try(ck.teardown, false)
-                ]
+                nonsensitive(local.run_containers_mapping_checks_map[container.value.name].liveness),
+                local.run_containers_mapping_checks_map[container.value.name].liveness
               )
               content {
                 period_seconds    = liveness_probe.value.interval
