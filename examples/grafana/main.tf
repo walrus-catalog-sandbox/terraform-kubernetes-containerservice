@@ -59,12 +59,12 @@ module "this" {
             path = "/robots.txt"
           }
         },
-        {
+        { # covered by the previous check.
           type     = "http"
+          teardown = true
           retries  = 3
           interval = 10
           timeout  = 1
-          teardown = true
           http = {
             port = 3000
           }
