@@ -470,7 +470,8 @@ resource "kubernetes_deployment_v1" "deployment" {
               ) : []
               content {
                 name       = volume_mount.value.name
-                mount_path = dirname(volume_mount.value.path)
+                mount_path = try(volume_mount.value.accept_changed, false) ? dirname(volume_mount.value.path) : volume_mount.value.path
+                sub_path   = try(volume_mount.value.accept_changed, false) ? null : basename(volume_mount.value.path)
               }
             }
 
@@ -482,8 +483,8 @@ resource "kubernetes_deployment_v1" "deployment" {
               ) : []
               content {
                 name       = volume_mount.value.name
-                mount_path = volume_mount.value.path
-                sub_path   = basename(volume_mount.value.path)
+                mount_path = try(volume_mount.value.accept_changed, false) ? dirname(volume_mount.value.path) : volume_mount.value.path
+                sub_path   = try(volume_mount.value.accept_changed, false) ? null : basename(volume_mount.value.path)
               }
             }
 
@@ -613,7 +614,8 @@ resource "kubernetes_deployment_v1" "deployment" {
               ) : []
               content {
                 name       = volume_mount.value.name
-                mount_path = dirname(volume_mount.value.path)
+                mount_path = try(volume_mount.value.accept_changed, false) ? dirname(volume_mount.value.path) : volume_mount.value.path
+                sub_path   = try(volume_mount.value.accept_changed, false) ? null : basename(volume_mount.value.path)
               }
             }
 
@@ -625,8 +627,8 @@ resource "kubernetes_deployment_v1" "deployment" {
               ) : []
               content {
                 name       = volume_mount.value.name
-                mount_path = volume_mount.value.path
-                sub_path   = basename(volume_mount.value.path)
+                mount_path = try(volume_mount.value.accept_changed, false) ? dirname(volume_mount.value.path) : volume_mount.value.path
+                sub_path   = try(volume_mount.value.accept_changed, false) ? null : basename(volume_mount.value.path)
               }
             }
 
