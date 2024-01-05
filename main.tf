@@ -412,6 +412,7 @@ resource "kubernetes_deployment_v1" "deployment" {
               read_only_root_filesystem = try(init_container.value.execute.readonly_rootfs, false)
               run_as_user               = try(init_container.value.execute.as_user, null)
               run_as_group              = try(init_container.value.execute.as_group, null)
+              privileged                = try(init_container.value.execute.privileged, null)
             }
 
             #### configure resources.
@@ -556,6 +557,7 @@ resource "kubernetes_deployment_v1" "deployment" {
               read_only_root_filesystem = try(container.value.execute.readonly_rootfs, false)
               run_as_user               = try(container.value.execute.as_user, null)
               run_as_group              = try(container.value.execute.as_group, null)
+              privileged                = try(container.value.execute.privileged, null)
             }
 
             #### configure resources.
