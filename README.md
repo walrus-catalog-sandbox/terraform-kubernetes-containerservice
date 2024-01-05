@@ -61,6 +61,7 @@ module "example" {
 - [Complete](./examples/complete)
 - [Grafana](./examples/grafana)
 - [Nginx](./examples/nginx)
+- [Walrus](./examples/walrus)
 - [WordPress](./examples/wordpress)
 
 ## Contributing
