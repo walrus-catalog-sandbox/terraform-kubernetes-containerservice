@@ -110,6 +110,10 @@ EOF
   ]
 }
 
+output "endpoints_postgres" {
+  value = module.postgres.endpoints
+}
+
 module "casdoor" {
   source = "../.."
 
@@ -236,6 +240,10 @@ EOF
   ]
 }
 
+output "endpoints_casdoor" {
+  value = module.casdoor.endpoints
+}
+
 module "redis" {
   source = "../.."
 
@@ -280,6 +288,10 @@ module "redis" {
       ]
     }
   ]
+}
+
+output "endpoints_redis" {
+  value = module.redis.endpoints
 }
 
 module "walrus" {
@@ -368,4 +380,8 @@ output "address" {
 
 output "ports" {
   value = module.walrus.ports
+}
+
+output "endpoints" {
+  value = module.walrus.endpoints
 }

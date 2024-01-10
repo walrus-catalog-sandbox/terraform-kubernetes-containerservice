@@ -75,6 +75,7 @@ locals {
               internal = p.internal
               external = p.external
               protocol = p.protocol == null ? "TCP" : upper(p.protocol)
+              schema   = p.schema == null ? (contains([80, 8080], p.internal) ? "http" : (contains([443, 8443], p.internal) ? "https" : null)) : lower(p.schema)
             }...
             if p != null
           } : ps[length(ps) - 1]
@@ -898,7 +899,9 @@ resource "kubernetes_deployment_v1" "deployment" {
 #
 
 locals {
-  external_ports = flatten([
+  service_type = try(coalesce(var.infrastructure.service_type, "NodePort"), "NodePort")
+
+  publish_ports = flatten([
     for c in local.containers : [
       for p in c.ports : p
       if try(p.external != null, false)
@@ -909,12 +912,13 @@ locals {
 
 resource "terraform_data" "replacement" {
   input = sha256(jsonencode({
-    has_external_ports = length(try(nonsensitive(local.external_ports), local.external_ports)) > 0
+    is_loadbalancer   = local.service_type == "LoadBalancer"
+    has_publish_ports = length(try(nonsensitive(local.publish_ports), local.publish_ports)) > 0
   }))
 }
 
 resource "kubernetes_service_v1" "service" {
-  wait_for_load_balancer = false
+  wait_for_load_balancer = local.service_type == "LoadBalancer"
 
   metadata {
     namespace   = local.namespace
@@ -925,16 +929,16 @@ resource "kubernetes_service_v1" "service" {
 
   spec {
     selector         = local.labels
-    type             = length(local.external_ports) > 0 ? try(coalesce(var.infrastructure.service_type, "NodePort"), "NodePort") : "ClusterIP"
-    session_affinity = length(local.external_ports) > 0 ? "ClientIP" : "None"
-    cluster_ip       = length(local.external_ports) > 0 ? null : "None"
+    type             = length(local.publish_ports) > 0 ? local.service_type : "ClusterIP"
+    session_affinity = length(local.publish_ports) > 0 && local.service_type == "ClientIP" ? "ClientIP" : "None"
+    cluster_ip       = length(local.publish_ports) > 0 ? null : "None"
 
     dynamic "port" {
-      for_each = try(nonsensitive(local.external_ports), local.external_ports)
+      for_each = try(nonsensitive(local.publish_ports), local.publish_ports)
       content {
         name        = lower(format("%s-%d", port.value.protocol, port.value.external))
-        target_port = port.value.internal
         port        = port.value.external
+        target_port = port.value.internal
         protocol    = port.value.protocol
       }
     }

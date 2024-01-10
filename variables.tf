@@ -150,6 +150,7 @@ containers:
   - internal: number
     external: number, optional
     protocol: tcp/udp
+    schema: string, optional
   checks:
   - type: execute/tcp/http/https
     delay: number, optional
@@ -220,6 +221,7 @@ EOF
       internal = number
       external = optional(number)
       protocol = optional(string, "tcp")
+      schema   = optional(string)
     })))
     checks = optional(list(object({
       type     = string

@@ -68,7 +68,7 @@ EOF
       ports = [
         {
           internal = 80
-          external = 80 # publish
+          external = 8080 # publish
           protocol = "tcp"
         }
       ]
@@ -104,4 +104,8 @@ output "address" {
 
 output "ports" {
   value = module.this.ports
+}
+
+output "endpoints" {
+  value = module.this.endpoints
 }
