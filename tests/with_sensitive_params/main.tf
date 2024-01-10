@@ -98,9 +98,10 @@ module "this" {
       ]
       ports = [
         {
-          internal = 80
-          external = 80
-          protocol = sensitive("tcp") # sensitive value
+          internal = sensitive(443)     # sensitive value
+          external = sensitive(8443)    # sensitive value
+          protocol = sensitive("tcp")   # sensitive value
+          schema   = sensitive("https") # sensitive value
         }
       ]
       checks = [
@@ -137,4 +138,8 @@ output "address" {
 
 output "ports" {
   value = module.this.ports
+}
+
+output "endpoints" {
+  value = module.this.endpoints
 }
