@@ -45,6 +45,7 @@ components:
               default: NodePort
               description: |
                 Specify the service type of the Kubernetes cluster, default is `NodePort`.
+                Automatically fallback to `ClientIP` if there is no external port specified.
               enum:
               - NodePort
               - LoadBalancer
