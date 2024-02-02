@@ -14,13 +14,11 @@ components:
           description: |
             Specify the infrastructure information for deploying.
           default: {}
-          nullable: true
           properties:
             domain_suffix:
               default: cluster.local
               description: |
                 Specify the domain name of the Kubernetes cluster.
-              nullable: true
               title: Domain Suffix
               type: string
               x-walrus-ui:
@@ -29,13 +27,11 @@ components:
               default: nvidia.com
               description: |
                 Specify the GPU vendor, default is `nvdia.com`.
-              nullable: true
               title: Gpu Vendor
               type: string
               x-walrus-ui:
                 order: 3
             namespace:
-              nullable: true
               title: Namespace
               type: string
               x-walrus-ui:
@@ -50,7 +46,6 @@ components:
               - NodePort
               - LoadBalancer
               - ClusterIP
-              nullable: true
               title: Service Type
               type: string
               x-walrus-ui:
@@ -70,13 +65,11 @@ components:
               max_surge: 0.25
               max_unavailable: 0.25
             timeout: 300
-          nullable: true
           properties:
             fs_group:
               description: |
                 Specify a special supplemental group that applies to all containers in a pod.
               minimum: 0
-              nullable: true
               title: Fs Group
               type: number
               x-walrus-ui:
@@ -86,7 +79,6 @@ components:
               description: |
                 Specify the desired replicas of the deployment.
               minimum: 1
-              nullable: true
               title: Replicas
               type: number
               x-walrus-ui:
@@ -94,7 +86,6 @@ components:
             rolling:
               description: |
                 Configure the rolling update strategy.
-              nullable: true
               properties:
                 max_surge:
                   default: 0.25
@@ -102,7 +93,6 @@ components:
                     The maximum number of pods that can be scheduled above the desired number of pods. The value must be range between 0 to 1.
                   maximum: 1
                   minimum: 0.1
-                  nullable: true
                   title: Max Surge
                   type: number
                   x-walrus-ui:
@@ -113,7 +103,6 @@ components:
                     The maximum number of pods that can be unavailable during the update. The value must be range between 0 to 1.
                   maximum: 1
                   minimum: 0.1
-                  nullable: true
                   title: Max Unavailable
                   type: number
                   x-walrus-ui:
@@ -148,7 +137,6 @@ components:
                 type: object
                 x-walrus-ui:
                   colSpan: 12
-              nullable: true
               title: Sysctls
               type: array
               x-walrus-ui:
@@ -159,7 +147,6 @@ components:
               description: "Specify the maximum time in seconds for a deployment to
                 make progress before it is considered to be failed. \n"
               minimum: 0
-              nullable: true
               title: Timeout(Sec)
               type: number
               x-walrus-ui:
@@ -190,7 +177,6 @@ components:
                       description: |
                         Specify the delay time before starting the check.
                       minimum: 0
-                      nullable: true
                       title: Delay(Sec)
                       type: number
                       x-walrus-ui:
@@ -199,7 +185,6 @@ components:
                     execute:
                       description: |
                         Configure the execution action.
-                      nullable: true
                       properties:
                         command:
                           description: |
@@ -222,14 +207,12 @@ components:
                     http:
                       description: |
                         Configure the http check.
-                      nullable: true
                       properties:
                         headers:
                           additionalProperties:
                             type: string
                           description: |
                             Specify the headers of the http request. To pin the Hostname, please use `Host` header.
-                          nullable: true
                           title: Headers
                           type: object
                           x-walrus-ui:
@@ -239,7 +222,6 @@ components:
                           default: /
                           description: |
                             Specify the path of the http request.
-                          nullable: true
                           title: Path
                           type: string
                           x-walrus-ui:
@@ -262,14 +244,12 @@ components:
                     https:
                       description: |
                         Configure the https check.
-                      nullable: true
                       properties:
                         headers:
                           additionalProperties:
                             type: string
                           description: |
                             Specify the headers of the http request. To pin the Hostname, please use `Host` header.
-                          nullable: true
                           title: Headers
                           type: object
                           x-walrus-ui:
@@ -279,7 +259,6 @@ components:
                           default: /
                           description: |
                             Specify the path of the http request.
-                          nullable: true
                           title: Path
                           type: string
                           x-walrus-ui:
@@ -304,7 +283,6 @@ components:
                       description: |
                         Specify how often to do the check.
                       minimum: 5
-                      nullable: true
                       title: Interval
                       type: number
                       x-walrus-ui:
@@ -315,7 +293,6 @@ components:
                       description: |
                         Specify the number of retries before marking this check as failed.
                       minimum: 1
-                      nullable: true
                       title: Retries
                       type: number
                       x-walrus-ui:
@@ -324,7 +301,6 @@ components:
                     tcp:
                       description: |
                         Configure the tcp check.
-                      nullable: true
                       properties:
                         port:
                           description: |
@@ -345,7 +321,6 @@ components:
                       default: false
                       description: |
                         Specify whether to teardown the pod if the check failed.
-                      nullable: true
                       title: Teardown
                       type: boolean
                       x-walrus-ui:
@@ -356,7 +331,6 @@ components:
                       description: |
                         Specify the timeout of the check.
                       minimum: 1
-                      nullable: true
                       title: Timeout(Sec)
                       type: number
                       x-walrus-ui:
@@ -382,7 +356,6 @@ components:
                   x-walrus-ui:
                     colSpan: 12
                 maxItems: 2
-                nullable: true
                 title: Checks
                 type: array
                 x-walrus-ui:
@@ -406,14 +379,12 @@ components:
                       description: |
                         Specify the value of the environment variable.
                         Value changes will be propagated and restart the container.
-                      nullable: true
                       title: Value
                       type: string
                       x-walrus-ui:
                         colSpan: 6
                         order: 2
                     value_refer:
-                      nullable: true
                       properties:
                         params:
                           additionalProperties:
@@ -444,7 +415,6 @@ components:
                   type: object
                   x-walrus-ui:
                     colSpan: 12
-                nullable: true
                 title: Envs
                 type: array
                 x-walrus-ui:
@@ -453,14 +423,12 @@ components:
               execute:
                 description: |
                   Configure the execution.
-                nullable: true
                 properties:
                   args:
                     description: |
                       Specify the arguments of the command.
                     items:
                       type: string
-                    nullable: true
                     title: Args
                     type: array
                     x-walrus-ui:
@@ -470,7 +438,6 @@ components:
                     description: |
                       Specify the group id to run the command.
                     minimum: 0
-                    nullable: true
                     title: As Group
                     type: number
                     x-walrus-ui:
@@ -480,7 +447,6 @@ components:
                     description: |
                       Specify the user id to run the command.
                     minimum: 0
-                    nullable: true
                     title: As User
                     type: number
                     x-walrus-ui:
@@ -491,7 +457,6 @@ components:
                       Specify the entrypoint of the container.
                     items:
                       type: string
-                    nullable: true
                     title: Command
                     type: array
                     x-walrus-ui:
@@ -501,7 +466,6 @@ components:
                     default: false
                     description: |
                       Specify whether to run the container as privileged.
-                    nullable: true
                     title: Privileged
                     type: boolean
                     x-walrus-ui:
@@ -510,7 +474,6 @@ components:
                     default: false
                     description: |
                       Specify whether to mount the rootfs as readonly.
-                    nullable: true
                     title: Readonly Rootfs
                     type: boolean
                     x-walrus-ui:
@@ -519,7 +482,6 @@ components:
                   working_dir:
                     description: |
                       Specify the working directory of the command.
-                    nullable: true
                     title: Working Dir
                     type: string
                     x-walrus-ui:
@@ -545,7 +507,6 @@ components:
                         and `/path/to/dir/file2.txt` \nor have the similar directory
                         path, like `/path/to/dir/file1.txt` and `/path/to/file2.txt`,
                         \nthis may cause the startup to fail.\n"
-                      nullable: true
                       title: Accept Changed
                       type: boolean
                       x-walrus-ui:
@@ -553,7 +514,6 @@ components:
                     content:
                       description: |
                         Specify the content of the (configuration) file.
-                      nullable: true
                       title: Content
                       type: string
                       x-walrus-ui:
@@ -561,7 +521,6 @@ components:
                         order: 3
                         widget: TextArea
                     content_refer:
-                      nullable: true
                       properties:
                         params:
                           additionalProperties:
@@ -593,7 +552,6 @@ components:
                         Specify the mode of the (configuration) file, default is 0644.
                       maxLength: 4
                       minLength: 4
-                      nullable: true
                       title: Mode
                       type: string
                       x-walrus-ui:
@@ -612,7 +570,6 @@ components:
                   type: object
                   x-walrus-ui:
                     colSpan: 12
-                nullable: true
                 title: Files
                 type: array
                 x-walrus-ui:
@@ -640,7 +597,6 @@ components:
                       default: false
                       description: |
                         Specify whether to mount the volume as readonly.
-                      nullable: true
                       title: Readonly
                       type: boolean
                       x-walrus-ui:
@@ -649,7 +605,6 @@ components:
                     subpath:
                       description: |
                         Specify the path of the volume which the container should be mounted.
-                      nullable: true
                       title: Subpath
                       type: string
                       x-walrus-ui:
@@ -659,14 +614,12 @@ components:
                       description: "Specify the name of the ephemeral volume which
                         shares between multiple containers. \nIf not specified, the
                         ephemeral volume is exclusively mounted by this container.\n"
-                      nullable: true
                       title: Volume
                       type: string
                       x-walrus-ui:
                         colSpan: 6
                         order: 2
                     volume_refer:
-                      nullable: true
                       properties:
                         params:
                           additionalProperties:
@@ -697,7 +650,6 @@ components:
                   type: object
                   x-walrus-ui:
                     colSpan: 12
-                nullable: true
                 title: Mounts
                 type: array
                 x-walrus-ui:
@@ -714,7 +666,6 @@ components:
                         This value mapps to the port of the Kubernetes Service, and be used for external communication.
                       maximum: 65535
                       minimum: 1
-                      nullable: true
                       title: External
                       type: number
                       x-walrus-ui:
@@ -738,7 +689,6 @@ components:
                       enum:
                       - tcp
                       - udp
-                      nullable: true
                       title: Protocol
                       type: string
                       x-walrus-ui:
@@ -757,7 +707,6 @@ components:
                   type: object
                   x-walrus-ui:
                     colSpan: 12
-                nullable: true
                 title: Ports
                 type: array
                 x-walrus-ui:
@@ -771,20 +720,17 @@ components:
                 enum:
                 - run
                 - init
-                nullable: true
                 title: Profile
                 type: string
                 x-walrus-ui:
                   order: 2
               resources:
-                nullable: true
                 properties:
                   cpu:
                     default: 0.25
                     description: |
                       Specify the cpu resources. Unit is core.
                     minimum: 0.1
-                    nullable: true
                     title: Cpu(Core)
                     type: number
                     x-walrus-ui:
@@ -795,7 +741,6 @@ components:
                     description: |
                       Specify the gpu resources. Unit is core.
                     minimum: 0
-                    nullable: true
                     title: Gpu(Core)
                     type: number
                     x-walrus-ui:
@@ -806,7 +751,6 @@ components:
                     description: |
                       Specify the memory resources. Unit is megabyte.
                     minimum: 10
-                    nullable: true
                     title: Memory(MiB)
                     type: number
                     x-walrus-ui:
